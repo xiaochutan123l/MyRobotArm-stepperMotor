@@ -18,11 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "utils.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "utils.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,6 +34,11 @@ static const bool False = 0;
 static const bool True = 1;
 #endif
 #endif 
+
+#define AIN1_Pin GPIO_PIN_6
+#define AIN2_Pin GPIO_PIN_7
+#define BIN1_Pin GPIO_PIN_8
+#define BIN2_Pin GPIO_PIN_9
 
 /* USER CODE END PTD */
 
@@ -73,6 +77,8 @@ static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 uint16_t MT6816Read();
+void stepMotor(int step);
+void stepMotorStop();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -126,8 +132,8 @@ int main(void)
   // 设置PWM
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  // 启动通道 1
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);  // 启动通道 2
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 800); // 50% 占空比
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 400); // 50% 占空比
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 50); // 50% 占空�??
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 50); // 50% 占空�??
   printf(" 2PWM pin PB5 set to 1.8V\n");
   printf(" 3PWM pin PB4 set to 1.8V\n");
   /* 启动 PWM 通道 */
@@ -140,42 +146,53 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    HAL_Delay(50);
+    //HAL_Delay(50);
 
-    pinState = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+    // pinState = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
 
-    if (pinState == GPIO_PIN_SET) {
-        // 引脚处于高电平
-        printf(" 4Button 2 value: 1\n");
-    } else {
-        // 引脚处于低电平
-        printf(" 4Button 2 value: 0\n");
+    // if (pinState == GPIO_PIN_SET) {
+    //     // 引脚处于高电平
+    //     printf(" 4Button 2 value: 1\n");
+    // } else {
+    //     // 引脚处于低电平
+    //     printf(" 4Button 2 value: 0\n");
+    // }
+    int rotations = 100;
+    for(int i = 0; i < rotations * 8; i++)
+    {
+        stepMotor(i);
+        HAL_Delay(1); // 控制步进速度
+        //printf(" 7MT6816 value: %u\n", MT6816Read());
     }
+    stepMotorStop();
+    HAL_Delay(1000);
+    
+    for(int i = rotations * 8 - 1; i >= 0; i--)
+    {
+        stepMotor(i);
+        HAL_Delay(1); // 控制步进速度
+        //printf(" 7MT6816 value: %u\n", MT6816Read());
+    }
+    stepMotorStop();
+    HAL_Delay(1000);
 
+  
   // 读取ADC
-  uint32_t adcValue;
-  HAL_ADC_Start(&hadc1);
-  if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
-    adcValue = HAL_ADC_GetValue(&hadc1);
-    printf(" 5ADC value: %lu\n", adcValue);
-  }
-  else {
-    printf(" 5ADC value: error\n");
-  }
-  HAL_ADC_Stop(&hadc1);
-  printf(" 6ADC value finished\n");
+  // uint32_t adcValue;
+  // HAL_ADC_Start(&hadc1);
+  // if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
+  //   adcValue = HAL_ADC_GetValue(&hadc1);
+  //   printf(" 5ADC value: %lu\n", adcValue);
+  // }
+  // else {
+  //   printf(" 5ADC value: error\n");
+  // }
+  // HAL_ADC_Stop(&hadc1);
+  // printf(" 6ADC value finished\n");
 
-  //printf(" 7MT6816 value: %u\n", MT6816Read());
-  uint32_t sum = 0;
-  for (int i = 0; i < 16; i++) {
-    sum += MT6816Read();
-  }
-  sum = sum >> 4;
-  sum = sum / 360;
-  printf(" 7MT6816 value: %lu\n", sum);
-  //uint16_t MT6816Read();
-
-  //   /* USER CODE BEGIN 3 */
+  
+  // printf(" 7MT6816 value: %u\n", MT6816Read());
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -330,7 +347,6 @@ static void MX_SPI1_Init(void)
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
-  // Mode 3: CHOL 1, CPHA 1
   hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
@@ -370,7 +386,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 1000 - 1;
+  htim3.Init.Period = 1000-1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
@@ -452,7 +468,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB1 PB2 */
   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
@@ -486,19 +512,19 @@ uint16_t MT6816Read(void) {
   bool checksumFlag = False;
 
   for (uint8_t i = 0; i < 3; i++) {
-    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-    GPIOA->BRR = GPIO_PIN_4;
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    //GPIOA->BRR = GPIO_PIN_4;
     HAL_SPI_TransmitReceive(&hspi1, (uint8_t*) &data_t[0], (uint8_t*) &data_r[0], 1, HAL_MAX_DELAY);
-    GPIOA->BSRR = GPIO_PIN_4;
-    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    //GPIOA->BSRR = GPIO_PIN_4;
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 
-    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-    GPIOA->BRR = GPIO_PIN_4;
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    //GPIOA->BRR = GPIO_PIN_4;
     HAL_SPI_TransmitReceive(&hspi1, (uint8_t*) &data_t[1], (uint8_t*) &data_r[1], 1, HAL_MAX_DELAY);
-    GPIOA->BSRR = GPIO_PIN_4;
-    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    //GPIOA->BSRR = GPIO_PIN_4;
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 
-    rawData = ((data_r[0] & 0xFF) << 8) | (data_r[1] & 0xFF);
+    rawData = ((data_r[0] & 0x00FF) << 8) | (data_r[1] & 0x00FF);
     
     uint16_t hCount = 0;
         for (uint8_t j = 0; j < 16; j++)
@@ -528,6 +554,68 @@ uint16_t MT6816Read(void) {
     //printf(" 8MT6816 read not ok\n");
   }
   return rawAngle;
+}
+
+void stepMotor(int step)
+{
+    switch(step % 8)
+    {
+        case 0:
+            HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_RESET);
+            break;
+        case 1:
+            HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_RESET);
+            break;
+        case 2:
+            HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_RESET);
+            break;
+        case 3:
+            HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_RESET);
+            break;
+        case 4:
+            HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_RESET);
+            break;
+        case 5:
+            HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_SET);
+            break;
+        case 6:
+            HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_SET);
+            break;
+        case 7:
+            HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_SET);
+            break;
+    }
+}
+
+void stepMotorStop() {
+  HAL_GPIO_WritePin(GPIOB, AIN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, AIN2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_RESET);
 }
 
 /* USER CODE END 4 */
