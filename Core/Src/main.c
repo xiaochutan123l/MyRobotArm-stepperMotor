@@ -28,6 +28,14 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+#ifndef __cplusplus
+#ifndef _BOOL
+typedef unsigned char bool;
+static const bool False = 0;
+static const bool True = 1;
+#endif
+#endif 
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -64,7 +72,7 @@ static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+uint16_t MT6816Read();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -132,16 +140,16 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    HAL_Delay(10);
+    HAL_Delay(50);
 
     pinState = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
 
     if (pinState == GPIO_PIN_SET) {
         // 引脚处于高电平
-        printf(" 6Button 2 value: 1\n");
+        printf(" 4Button 2 value: 1\n");
     } else {
         // 引脚处于低电平
-        printf(" 6Button 2 value: 0\n");
+        printf(" 4Button 2 value: 0\n");
     }
 
   // 读取ADC
@@ -149,14 +157,24 @@ int main(void)
   HAL_ADC_Start(&hadc1);
   if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
     adcValue = HAL_ADC_GetValue(&hadc1);
-    printf(" 7ADC value: %lu\n", adcValue);
+    printf(" 5ADC value: %lu\n", adcValue);
   }
   else {
-    printf(" 8ADC value: error\n");
+    printf(" 5ADC value: error\n");
   }
   HAL_ADC_Stop(&hadc1);
-  printf(" 9ADC value finished\n");
-  
+  printf(" 6ADC value finished\n");
+
+  //printf(" 7MT6816 value: %u\n", MT6816Read());
+  uint32_t sum = 0;
+  for (int i = 0; i < 16; i++) {
+    sum += MT6816Read();
+  }
+  sum = sum >> 4;
+  sum = sum / 360;
+  printf(" 7MT6816 value: %lu\n", sum);
+  //uint16_t MT6816Read();
+
   //   /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -311,11 +329,12 @@ static void MX_SPI1_Init(void)
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
+  // Mode 3: CHOL 1, CPHA 1
+  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -453,6 +472,63 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+uint16_t MT6816Read(void) {
+  uint16_t data_t[2];
+  uint16_t data_r[2];
+  uint16_t rawData;
+  data_t[0] = (0x80 | 0x03) << 8;
+  data_t[1] = (0x80 | 0x04) << 8;
+  //dataTx[0] = (0x80 | 0x03) << 8;
+  //dataTx[1] = (0x80 | 0x04) << 8;
+  uint16_t rawAngle;
+  //uint16_t rectifiedAngle;
+  bool checksumFlag = False;
+
+  for (uint8_t i = 0; i < 3; i++) {
+    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    GPIOA->BRR = GPIO_PIN_4;
+    HAL_SPI_TransmitReceive(&hspi1, (uint8_t*) &data_t[0], (uint8_t*) &data_r[0], 1, HAL_MAX_DELAY);
+    GPIOA->BSRR = GPIO_PIN_4;
+    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+
+    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    GPIOA->BRR = GPIO_PIN_4;
+    HAL_SPI_TransmitReceive(&hspi1, (uint8_t*) &data_t[1], (uint8_t*) &data_r[1], 1, HAL_MAX_DELAY);
+    GPIOA->BSRR = GPIO_PIN_4;
+    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+
+    rawData = ((data_r[0] & 0xFF) << 8) | (data_r[1] & 0xFF);
+    
+    uint16_t hCount = 0;
+        for (uint8_t j = 0; j < 16; j++)
+        {
+            if (rawData & (0x0001 << j))
+                hCount++;
+        }
+        if (hCount & 0x01)
+        {
+            checksumFlag = False;
+        } else
+        {
+            checksumFlag = True;
+            break;
+        }
+  }
+
+  //printf(" 0 rawData%u\n", rawData);
+
+  if (checksumFlag) {
+    rawAngle = rawData >> 2;
+    //printf(" 8MT6816 %u, %u\n", data_r[0], data_r[1]);
+    //no_mag_flag = (bool) (rawData & 0x0010);
+    //printf(" 8MT6816 read ok\n");
+  }
+  else {
+    //printf(" 8MT6816 read not ok\n");
+  }
+  return rawAngle;
+}
 
 /* USER CODE END 4 */
 
