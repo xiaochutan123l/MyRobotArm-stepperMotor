@@ -72,9 +72,9 @@ static const bool True = 1;
 // TIM_HandleTypeDef htim3;
 // TIM_HandleTypeDef htim4;
 
-// extern UART_HandleTypeDef huart1;
-// extern DMA_HandleTypeDef hdma_usart1_rx;
-// extern DMA_HandleTypeDef hdma_usart1_tx;
+// UART_HandleTypeDef huart1;
+// DMA_HandleTypeDef hdma_usart1_rx;
+// DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN PV */
 
@@ -84,7 +84,7 @@ static const bool True = 1;
 void SystemClock_Config(void);
 // static void MX_GPIO_Init(void);
 // static void MX_DMA_Init(void);
-//static void MX_ADC1_Init(void);
+// static void MX_ADC1_Init(void);
 // static void MX_CAN_Init(void);
 // static void MX_SPI1_Init(void);
 // static void MX_TIM3_Init(void);
@@ -92,7 +92,7 @@ void SystemClock_Config(void);
 // static void MX_TIM1_Init(void);
 // static void MX_TIM2_Init(void);
 // static void MX_TIM4_Init(void);
-/* USER CODE BEGIN PFP */
+// /* USER CODE BEGIN PFP */
 uint16_t MT6816Read();
 void stepMotor(int step);
 void stepMotorStop();
@@ -153,8 +153,8 @@ int main(void)
   // 设置PWM
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  // 启动通道 1
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);  // 启动通道 2
-  // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 50); // 50% 占空�???
-  // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 50); // 50% 占空�???
+  // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 50); // 50% 占空�????
+  // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 50); // 50% 占空�????
   // printf(" 2PWM pin PB5 set to 1.8V\n");
   // printf(" 3PWM pin PB4 set to 1.8V\n");
   /* 启动 PWM 通道 */
@@ -453,7 +453,7 @@ void SystemClock_Config(void)
 //   htim3.Instance = TIM3;
 //   htim3.Init.Prescaler = 0;
 //   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-//   htim3.Init.Period = 65535;
+//   htim3.Init.Period = 1000;
 //   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 //   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 //   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
@@ -504,9 +504,9 @@ void SystemClock_Config(void)
 
 //   /* USER CODE END TIM4_Init 1 */
 //   htim4.Instance = TIM4;
-//   htim4.Init.Prescaler = 72-1;
+//   htim4.Init.Prescaler = 7200-1;
 //   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-//   htim4.Init.Period = 65535;
+//   htim4.Init.Period = 5000;
 //   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 //   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 //   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -613,7 +613,7 @@ void SystemClock_Config(void)
 
 //   /*Configure GPIO pins : PB1 PB2 */
 //   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
-//   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+//   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 //   GPIO_InitStruct.Pull = GPIO_NOPULL;
 //   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -623,6 +623,13 @@ void SystemClock_Config(void)
 //   GPIO_InitStruct.Pull = GPIO_NOPULL;
 //   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 //   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+//   /* EXTI interrupt init*/
+//   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+//   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+//   HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+//   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
 // /* USER CODE BEGIN MX_GPIO_Init_2 */
 // /* USER CODE END MX_GPIO_Init_2 */

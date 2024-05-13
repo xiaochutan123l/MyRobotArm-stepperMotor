@@ -11,6 +11,9 @@ extern ADC_HandleTypeDef hadc1;
 
 void MX_ADC1_Init(void);
 
+void ADC_Read_Chanlles(uint16_t *readValue);
+// int ADC_Read(uint8_t count);
+
 #ifdef __cplusplus
 }
 #endif
