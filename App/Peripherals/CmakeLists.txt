@@ -1,42 +1,27 @@
-cmake_minimum_required(VERSION 3.22)
 
-project(peripherals)
-add_library(peripherals)
 
-# Enable CMake support for ASM and C languages
-enable_language(C C++ ASM)
+# # 添加所有的 .cpp 文件
+# file(GLOB APP_SOURCES "*.cpp")
 
-# target_compile_definitions(stm32cubemx INTERFACE 
-# 	USE_HAL_DRIVER 
-# 	STM32F103xB
-#     $<$<CONFIG:Debug>:DEBUG>
-# )
+set(APP_SOURCES
+    ./Src/adc.cpp
+    ./Src/gpio.cpp
+    ./Src/spi.cpp 
 
-add_subdirectory(../../cmake/stm32cubemx)
-
-target_include_directories(stm32cubemx
-    ../../Core/Inc
-    ./Inc
-    # ../../Drivers/STM32F1xx_HAL_Driver/Inc
-    # ../../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy
-    # ../../Drivers/CMSIS/Device/ST/STM32F1xx/Include
-    # ../../Drivers/CMSIS/Include
+    #./Src/main.cpp
 )
 
-target_sources(peripherals
-    ./adc.cpp 
+# 创建可执行文件
+add_executable(peripherals ${APP_SOURCES})
 
+# 包含 cmake 文件夹中的头文件
+target_include_directories(peripherals PUBLIC
+    # ${CMAKE_SOURCE_DIR}/Core/Inc
+    # ${CMAKE_SOURCE_DIR}/Drivers/STM32F1xx_HAL_Driver/Inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Inc
 )
 
-# target_link_directories(stm32cubemx INTERFACE
-# )
+# 链接 stm32cubemx 库
+target_link_directories(peripherals PUBLIC ${CMAKE_SOURCE_DIR}/cmake/stm32cubemx)
 
-target_link_libraries(stm32cubemx peripherals
-)
-
-# Validate that STM32CubeMX code is compatible with C standard
-if(CMAKE_C_STANDARD LESS 11)
-    message(ERROR "Generated code requires C11 or higher")
-endif()
-
-
+target_link_libraries(peripherals stm32cubemx)

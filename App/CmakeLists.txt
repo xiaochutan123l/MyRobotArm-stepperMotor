@@ -1,2 +1,29 @@
+# App/CMakeLists.txt
+cmake_minimum_required(VERSION 3.10)
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/gcc-arm-none-eabi.cmake")
+project(app LANGUAGES CXX)
+
+# 设置 C++ 标准
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# # 添加所有的 .cpp 文件
+# # file(GLOB APP_SOURCES "*.cpp")
+
+# # 包含 cmake 文件夹中的头文件
+# include_directories(${CMAKE_SOURCE_DIR}/cmake/include)
+
+# # 创建可执行文件
+# add_executable(AppExecutable ${APP_SOURCES})
+
+add_subdirectory(
+    ./Peripherals
+    #./Drivers
+    #./Applications
+)
+
+# 链接 stm32cubemx 库
+#target_link_libraries(AppExecutable PRIVATE peripherals drivers applications)
+#target_link_libraries(peripherals)
 
 
