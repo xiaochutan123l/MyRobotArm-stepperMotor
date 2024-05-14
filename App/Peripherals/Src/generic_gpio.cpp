@@ -1,6 +1,6 @@
 #include "generic_gpio.hpp"
 
-static bool m_isInitialized = false;
+bool Generic_GPIO::m_isInitialized = false;
 
 Generic_GPIO::Generic_GPIO(uint8_t gpio_name) {
     if (!m_isInitialized) {

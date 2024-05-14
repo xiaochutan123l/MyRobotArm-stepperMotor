@@ -12,8 +12,8 @@ public:
     inline void setLow();
     inline void setHigh();
 
-    uint8_t m_gpio_group;
-    uint8_t m_gpio_pin;
+    GPIO_TypeDef *m_gpio_group;
+    uint16_t m_gpio_pin;
     static bool m_isInitialized;
 };
 
