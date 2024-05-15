@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "usart.h"
+#include "dma.hpp"
 #include <cstdint>
 
 extern UART_HandleTypeDef huart1;
@@ -10,15 +11,18 @@ extern UART_HandleTypeDef huart1;
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 
-class UartDMA
+// currently UartDMA only work for UART1, 
+// later may need to be reconstructed to adapt multiple uarts.
+
+class UartDMA : DMA
 {
 public:
     UartDMA();
     void transmit(uint8_t *data, uint16_t size);
     void receive(uint8_t *data, uint16_t size);
 
-    inline void onTxComplete();
-    inline void onRxComplete();
+    static inline void onTxComplete();
+    static inline void onRxComplete();
 
     static inline void TxCpltCallback(UART_HandleTypeDef *huart);
     static inline void RxCpltCallback(UART_HandleTypeDef *huart);
@@ -30,8 +34,8 @@ private:
 
     uint8_t *m_rxBuffer;
     uint16_t m_rxBufferSize;
-    volatile bool m_rxComplete;
-    volatile bool m_txComplete;
+    static volatile bool m_rxComplete;
+    static volatile bool m_txComplete;
 };
 
 #endif // UARTDMA_HPP

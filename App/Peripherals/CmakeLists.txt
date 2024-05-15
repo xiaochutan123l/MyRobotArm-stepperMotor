@@ -7,6 +7,8 @@ set(APP_SOURCES
     ./Src/adc.cpp
     ./Src/generic_gpio.cpp
     ./Src/spi.cpp 
+    ./Src/dma.cpp 
+    ./Src/uart_dma.cpp 
 
     ./Src/main.cpp
 )

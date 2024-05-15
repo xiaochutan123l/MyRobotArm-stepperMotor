@@ -4,7 +4,7 @@ UartDMA::UartDMA() : m_huart(&huart1), m_hdma_tx(&hdma_usart1_rx), m_hdma_rx(&hd
 {
     MX_USART1_UART_Init();
     // start dma for incomming uart message.
-    HAL_UART_Receive_DMA(m_huart, data, size);
+    //HAL_UART_Receive_DMA(m_huart, data, size);
 }
 
 void UartDMA::transmit(uint8_t *data, uint16_t size)
@@ -37,11 +37,7 @@ inline void UartDMA::TxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == USART1) // 确认是我们使用的 UART 实例
     {
-        UartDMA *instance = reinterpret_cast<UartDMA*>(huart->pUserData);
-        if (instance)
-        {
-            instance->onTxComplete();
-        }
+        UartDMA::onTxComplete();
     }
 }
 
@@ -49,11 +45,7 @@ inline void UartDMA::RxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == USART1) // 确认是我们使用的 UART 实例
     {
-        UartDMA *instance = reinterpret_cast<UartDMA*>(huart->pUserData);
-        if (instance)
-        {
-            instance->onRxComplete();
-        }
+        UartDMA::onRxComplete();
     }
 }
 
