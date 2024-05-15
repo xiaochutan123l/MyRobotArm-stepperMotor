@@ -2,7 +2,7 @@
 
 bool DMA::m_isInitialized = false;
 
-DMA::DMA() {
+void DMA::init() {
     if (!m_isInitialized) {
         MX_DMA_Init();
         m_isInitialized = true;

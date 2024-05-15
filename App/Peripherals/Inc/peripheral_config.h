@@ -24,6 +24,14 @@ extern "C" {
 #define BIN1_Pin GPIOB_PIN_8
 #define BIN2_Pin GPIOB_PIN_9
 
+#define Tick2hz    4
+#define Tick100hz  1
+#define Tick20khz  2
+
+#define PWM_PERIOD 1000
+#define VREF_A TIM_CHANNEL_1
+#define VREF_B TIM_CHANNEL_2
+
 #ifdef __cplusplus
 }
 #endif

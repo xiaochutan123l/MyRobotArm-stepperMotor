@@ -8,9 +8,10 @@
 
 class Generic_GPIO {
 public:
-    Generic_GPIO(uint8_t gpio_name);
-    inline void setLow();
-    inline void setHigh();
+    Generic_GPIO(uint16_t gpio_name);
+    void init();
+    inline void setLow() {HAL_GPIO_WritePin(m_gpio_group, m_gpio_pin, GPIO_PIN_SET);};
+    inline void setHigh() {HAL_GPIO_WritePin(m_gpio_group, m_gpio_pin, GPIO_PIN_RESET);};
 
     GPIO_TypeDef *m_gpio_group;
     uint16_t m_gpio_pin;

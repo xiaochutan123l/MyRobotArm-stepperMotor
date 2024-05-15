@@ -2,11 +2,7 @@
 
 bool Generic_GPIO::m_isInitialized = false;
 
-Generic_GPIO::Generic_GPIO(uint8_t gpio_name) {
-    if (!m_isInitialized) {
-        MX_GPIO_Init();
-        m_isInitialized = true;
-    }
+Generic_GPIO::Generic_GPIO(uint16_t gpio_name) {
     switch(gpio_name) {
         case AIN1_Pin:
             m_gpio_group = GPIOB;
@@ -27,10 +23,9 @@ Generic_GPIO::Generic_GPIO(uint8_t gpio_name) {
     }
 }
 
-inline void Generic_GPIO::setHigh() {
-    HAL_GPIO_WritePin(m_gpio_group, m_gpio_pin, GPIO_PIN_SET);
-}
-
-inline void Generic_GPIO::setLow() {
-    HAL_GPIO_WritePin(m_gpio_group, m_gpio_pin, GPIO_PIN_RESET);
+void Generic_GPIO::init() {
+    if (!m_isInitialized) {
+        MX_GPIO_Init();
+        m_isInitialized = true;
+    }
 }

@@ -1,10 +1,15 @@
 #include "uart_dma.hpp"
 
+volatile bool m_rxComplete = false;
+volatile bool m_txComplete = false;
+
 UartDMA::UartDMA() : m_huart(&huart1), m_hdma_tx(&hdma_usart1_rx), m_hdma_rx(&hdma_usart1_tx)
 {
+}
+
+void UartDMA::init() {
+    DMA::init();
     MX_USART1_UART_Init();
-    // start dma for incomming uart message.
-    //HAL_UART_Receive_DMA(m_huart, data, size);
 }
 
 void UartDMA::transmit(uint8_t *data, uint16_t size)

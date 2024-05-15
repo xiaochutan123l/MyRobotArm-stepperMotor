@@ -6,7 +6,8 @@
 
 class DMA {
 public:
-    DMA();
+    //DMA();
+    void init();
     static bool m_isInitialized;
 };
 

@@ -9,6 +9,8 @@ set(APP_SOURCES
     ./Src/spi.cpp 
     ./Src/dma.cpp 
     ./Src/uart_dma.cpp 
+    ./Src/timer.cpp 
+    ./Src/pwm.cpp 
 
     ./Src/main.cpp
 )

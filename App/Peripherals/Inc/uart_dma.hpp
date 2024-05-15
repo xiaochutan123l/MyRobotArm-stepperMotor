@@ -18,6 +18,7 @@ class UartDMA : DMA
 {
 public:
     UartDMA();
+    void init();
     void transmit(uint8_t *data, uint16_t size);
     void receive(uint8_t *data, uint16_t size);
 
