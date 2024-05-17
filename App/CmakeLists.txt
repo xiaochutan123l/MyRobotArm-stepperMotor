@@ -17,11 +17,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # add_executable(AppExecutable ${APP_SOURCES})
 
 add_subdirectory(
-    Peripherals
-    #./Drivers
-    #./Applications
+    ./Drivers
 )
 
+add_subdirectory(
+    ./Peripherals
+)
 # 链接 stm32cubemx 库
 #target_link_libraries(AppExecutable PRIVATE peripherals drivers applications)
 #target_link_libraries(peripherals)

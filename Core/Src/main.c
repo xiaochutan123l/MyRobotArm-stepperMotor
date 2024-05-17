@@ -21,15 +21,15 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "utils.h"
+//#include "utils.h"
 
-#include "adc.h"
-#include "can.h"
-#include "dma.h"
-#include "spi.h"
-#include "tim.h"
-#include "usart.h"
-#include "gpio.h"
+// #include "adc.h"
+// #include "can.h"
+// #include "dma.h"
+// #include "spi.h"
+// #include "tim.h"
+// #include "usart.h"
+// #include "gpio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,20 +61,20 @@ static const bool True = 1;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-// ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc1;
 
-// CAN_HandleTypeDef hcan;
+CAN_HandleTypeDef hcan;
 
-// SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi1;
 
-// TIM_HandleTypeDef htim1;
-// TIM_HandleTypeDef htim2;
-// TIM_HandleTypeDef htim3;
-// TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
-// UART_HandleTypeDef huart1;
-// DMA_HandleTypeDef hdma_usart1_rx;
-// DMA_HandleTypeDef hdma_usart1_tx;
+UART_HandleTypeDef huart1;
+DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN PV */
 
@@ -82,16 +82,16 @@ static const bool True = 1;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-// static void MX_GPIO_Init(void);
-// static void MX_DMA_Init(void);
-// static void MX_ADC1_Init(void);
-// static void MX_CAN_Init(void);
-// static void MX_SPI1_Init(void);
-// static void MX_TIM3_Init(void);
-// static void MX_USART1_UART_Init(void);
-// static void MX_TIM1_Init(void);
-// static void MX_TIM2_Init(void);
-// static void MX_TIM4_Init(void);
+static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_CAN_Init(void);
+static void MX_SPI1_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_TIM1_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_TIM4_Init(void);
 // /* USER CODE BEGIN PFP */
 uint16_t MT6816Read();
 void stepMotor(int step);
@@ -144,19 +144,19 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
     // 设置GPIO
-  // printf(" 0GPIO PB8 set to high\n");
-  // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
-  // printf(" 1GPIO PB9 set to high\n");
-  // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);
-  //GPIO_PinState pinState;
+  //printf(" 0GPIO PB8 set to high\n");
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+  //printf(" 1GPIO PB9 set to high\n");
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);
+  GPIO_PinState pinState;
 
   // 设置PWM
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  // 启动通道 1
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);  // 启动通道 2
-  // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 50); // 50% 占空�????
-  // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 50); // 50% 占空�????
-  // printf(" 2PWM pin PB5 set to 1.8V\n");
-  // printf(" 3PWM pin PB4 set to 1.8V\n");
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 50); // 50% 占空�????
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 50); // 50% 占空�????
+  //printf(" 2PWM pin PB5 set to 1.8V\n");
+  //printf(" 3PWM pin PB4 set to 1.8V\n");
   /* 启动 PWM 通道 */
 
 
