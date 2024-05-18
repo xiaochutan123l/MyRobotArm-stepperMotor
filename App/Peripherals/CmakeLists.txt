@@ -13,10 +13,12 @@ set(APP_SOURCES
     ./Src/pwm.cpp 
 
     #./Src/main.cpp
+    #./Src/peripheral_test.cpp
 )
 
 # 创建可执行文件
 add_library(peripherals ${APP_SOURCES})
+#add_executable(peripherals ${APP_SOURCES})
 
 #包含 cmake 文件夹中的头文件
 target_include_directories(peripherals PUBLIC

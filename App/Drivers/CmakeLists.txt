@@ -1,5 +1,6 @@
 set(APP_SOURCES
     ./Src/mt6816.cpp
+    ./Src/tb67h450.cpp
 
     ./Src/main.cpp
 )

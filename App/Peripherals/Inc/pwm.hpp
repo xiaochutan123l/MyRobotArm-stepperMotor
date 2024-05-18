@@ -9,7 +9,7 @@ public:
     PWM(uint32_t channel);
     void init();
     // Period 1000.
-    inline void setVoltage(uint32_t value) {__HAL_TIM_SET_COMPARE(m_htim, m_channel, value);};
+    inline void setVoltage(uint16_t value) {__HAL_TIM_SET_COMPARE(m_htim, m_channel, value);};
 
     static bool m_isInitialized;
 

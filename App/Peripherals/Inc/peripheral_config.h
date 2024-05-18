@@ -10,7 +10,7 @@ extern "C" {
 
 // ADC
 #define TEMP_SENSOR 0
-#define VOLTAGE 0
+#define VOLTAGE 1
 
 // Generic gpio
 
