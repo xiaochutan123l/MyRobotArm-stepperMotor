@@ -28,15 +28,14 @@ int main() {
     tb67h450.init();
     
     HAL_Delay(100);
-    tb67h450.setVrefA(100);
-    tb67h450.setVrefB(100);
+    tb67h450.setVrefA(30);
+    tb67h450.setVrefB(30);
     while (1) {
         int rotations = 100;
         for(int i = 0; i < rotations * 8; i++)
         {
             stepMotor(i);
-            HAL_Delay(10); // 控制步进速度
-            //printf(" 7MT6816 value: %u\n", MT6816Read());
+            HAL_Delay(1); // 控制步进速度
         }
         // printf(" 7MT6816 value: %u\n", angleData.data);
         mt6816.readAngle(angleData);
@@ -47,8 +46,7 @@ int main() {
         for(int i = rotations * 8 - 1; i >= 0; i--)
         {
             stepMotor(i);
-            HAL_Delay(10); // 控制步进速度
-            //printf(" 7MT6816 value: %u\n", MT6816Read());
+            HAL_Delay(1); // 控制步进速度
         }
         mt6816.readAngle(angleData);
         // printf(" 7MT6816 value: %u\n", angleData.data);

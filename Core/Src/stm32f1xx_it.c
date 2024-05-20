@@ -47,9 +47,9 @@
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 // IRQHandlers
-extern void Ticker100Hz();
-extern void Ticker2Hz();
-extern void Ticker20kHz();
+extern void TickerTim1();
+extern void TickerTim2();
+extern void TickerTim4();
 extern void gpio1ISR();
 extern void gpio2ISR();
 /* USER CODE END PFP */
@@ -286,9 +286,18 @@ void TIM1_UP_IRQHandler(void)
   /* USER CODE BEGIN TIM1_UP_IRQn 0 */
 
   /* USER CODE END TIM1_UP_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
+  //HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_IRQn 1 */
-  Ticker100Hz();
+  
+  /* TIM Update event */
+  if (__HAL_TIM_GET_FLAG(&htim1, TIM_FLAG_UPDATE) != RESET)
+  {
+      if (__HAL_TIM_GET_IT_SOURCE(&htim1, TIM_IT_UPDATE) != RESET)
+      {
+          __HAL_TIM_CLEAR_IT(&htim1, TIM_IT_UPDATE);
+      }
+  }
+  TickerTim1();
   /* USER CODE END TIM1_UP_IRQn 1 */
 }
 
@@ -300,9 +309,16 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 0 */
 
   /* USER CODE END TIM2_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim2);
+  //HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
-  Ticker20kHz();
+  if (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_UPDATE) != RESET)
+  {
+      if (__HAL_TIM_GET_IT_SOURCE(&htim2, TIM_IT_UPDATE) != RESET)
+      {
+          __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
+      }
+  }
+  TickerTim2();
   /* USER CODE END TIM2_IRQn 1 */
 }
 
@@ -314,9 +330,16 @@ void TIM4_IRQHandler(void)
   /* USER CODE BEGIN TIM4_IRQn 0 */
 
   /* USER CODE END TIM4_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim4);
+  //HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
-  Ticker2Hz();
+  if (__HAL_TIM_GET_FLAG(&htim4, TIM_FLAG_UPDATE) != RESET)
+  {
+      if (__HAL_TIM_GET_IT_SOURCE(&htim4, TIM_IT_UPDATE) != RESET)
+      {
+          __HAL_TIM_CLEAR_IT(&htim4, TIM_IT_UPDATE);
+      }
+  }
+  TickerTim4();
   /* USER CODE END TIM4_IRQn 1 */
 }
 

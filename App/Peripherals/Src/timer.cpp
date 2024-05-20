@@ -1,69 +1,56 @@
 #include "timer.hpp"
 
-void (*Timer::m_ticker100hz)(void*) = nullptr;
-void (*Timer::m_ticker2hz)(void*) = nullptr;
-void (*Timer::m_ticker20khz)(void*) = nullptr;
-void* Timer::m_ticker100hzContext = nullptr;
-void* Timer::m_ticker2hzContext = nullptr;
-void* Timer::m_ticker20khzContext = nullptr;
+Timer* timerInstances[TIMER_NUM] = {nullptr};
 
 Timer::Timer(uint8_t index) : m_index(index) {
 
 }
 
-void Timer::start() {
+void Timer::init() {
     switch (m_index) {
-        case 1:
-            HAL_TIM_Base_Start_IT(&htim1);
+        case TICKER_TIM1:
+            m_htim = &htim1;
+            timerInstances[TICKER_TIM1] = this;
+            MX_TIM1_Init();
             break;
-        case 2:
-            HAL_TIM_Base_Start_IT(&htim2);
+        case TICKER_TIM2:
+            m_htim = &htim2;
+            timerInstances[TICKER_TIM2] = this;
+            MX_TIM2_Init();
             break;
-        case 4:
-            HAL_TIM_Base_Start_IT(&htim4);
+        case TICKER_TIM4:
+            m_htim = &htim4;
+            timerInstances[TICKER_TIM4] = this;
+            MX_TIM4_Init();
             break;
+    }
+}
+
+void Timer::start() {
+    if (m_htim != nullptr && timerInstances[m_index] != nullptr) {
+        HAL_TIM_Base_Start_IT(m_htim);
     }
 }
 
 void Timer::stop() {
-    switch (m_index) {
-        case 1:
-            HAL_TIM_Base_Stop_IT(&htim1);
-            break;
-        case 2:
-            HAL_TIM_Base_Stop_IT(&htim2);
-            break;
-        case 4:
-            HAL_TIM_Base_Stop_IT(&htim4);
-            break;
+    if (m_htim && timerInstances[m_index]) {
+        HAL_TIM_Base_Stop_IT(m_htim);
     }
 }
 
 void Timer::setCallback(void (*callback)(void*), void* context) {
-    switch (m_index) {
-        case 1:
-            m_ticker100hz = callback;
-            m_ticker100hzContext = context;
-            break;
-        case 2:
-            m_ticker2hz = callback;
-            m_ticker2hzContext = context;
-            break;
-        case 4:
-            m_ticker20khz = callback;
-            m_ticker20khzContext = context;
-            break;
-    }
+    m_tickCallback = callback;
+    m_tickerContext = context;
 }
 
-extern "C" void Ticker100Hz() {
-    Timer::ticker100hz();
+extern "C" void TickerTim1() {
+    timerInstances[TICKER_TIM1]->tick();
 }
 
-extern "C" void Ticker2Hz() {
-    Timer::ticker2hz();
+extern "C" void TickerTim2() {
+    timerInstances[TICKER_TIM2]->tick();
 }
 
-extern "C" void Ticker20kHz() {
-    Timer::ticker20khz();
+extern "C" void TickerTim4() {
+    timerInstances[TICKER_TIM4]->tick();
 }

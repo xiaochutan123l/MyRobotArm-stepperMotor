@@ -17,6 +17,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # add_executable(AppExecutable ${APP_SOURCES})
 
 add_subdirectory(
+    ./Applications
+)
+
+add_subdirectory(
     ./Drivers
 )
 
