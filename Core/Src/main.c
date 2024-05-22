@@ -92,7 +92,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM4_Init(void);
-// /* USER CODE BEGIN PFP */
+/* USER CODE BEGIN PFP */
 uint16_t MT6816Read();
 void stepMotor(int step);
 void stepMotorStop();

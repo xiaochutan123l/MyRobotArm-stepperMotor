@@ -12,6 +12,12 @@
 
 #include "sin_map.h"
 
+
+//uint16_t MT6816Read();
+void stepMotor(int step);
+void stepMotor8(int step);
+void stepMotorStop();
+
 typedef struct
 {
     uint16_t sinMapPtr;
@@ -35,7 +41,17 @@ Timer timer500ms(Tick2hz);
 UartDMA uart;
 #define BUFFER_SIZE 128
 uint8_t uartSendBuf[BUFFER_SIZE];
+uint8_t uartTestBuf[BUFFER_SIZE];
+uint16_t prevPosition = 0;
 uint8_t uartCount = 0;
+
+
+#define STEP_PER_CIRCLE 4
+int rotations = 100;  // 50 teeth
+int i = 0;
+bool direction = true;
+int subDivision = 50;
+int subDivCount = 0;
 
 int count_100ms = 0;
 int count_500ms = 0;
@@ -43,31 +59,6 @@ int count_500ms = 0;
 void loop100ms(void *context);
 void loop50us(void *context);
 void loop500ms(void *context);
-
-
-// volecity pid
-int32_t speed = 0;
-int32_t kp = 0;
-int32_t ki = 0;
-int32_t kd = 0;
-int32_t currentPosition = 0;
-int32_t prevPosition = 0;
-int32_t velocity = 0;
-int32_t positionDiff = 0;
-int32_t speedDiff = 0;
-int32_t prevSpeed = 0;
-int32_t speedError = 0;
-int32_t prevSpeedError = 0;
-int32_t speedDerivative = 0;
-int32_t pidOutput = 0;
-int32_t integral = 0;
-#define MAX_CURRENT 1000 // ma
-#define MAX_SPEED 256 // max 256 subdivision
-void calcVelocityPid(int32_t _speed);
-
-
-int32_t targetSpeed = 5; // max 81.92
-uint32_t count = 0;
 
 int main() {
     System_Init();
@@ -111,53 +102,24 @@ int main() {
 
 // main loop
 void loop50us(void *context) {
-    // if (goPosition <= 51200)
-    // //if (goPosition <= 9000)
-    // {
-    //     // 测试：以2000mA电流跑一圈
-    //     mt6816.readAngle(angleData);
-    //     uartCount++;
-    //     if (uartCount == 200 && uart.m_txComplete) {
-    //         uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%u,%u\n", angleData.data, goPosition);
-    //         uart.transmit((uint8_t*)uartSendBuf, len);
-    //         uartCount = 0;
-    //     }
-        
-    //     SetFocCurrentVector(goPosition, 1000);
-    //     goPosition += 2;
-    // }
-    // else {
-    //     goPosition = 0;
-    // }
-    mt6816.readAngle(angleData);
-    positionDiff = angleData.data - prevPosition;
-    prevPosition = angleData.data;
-    if (uart.m_txComplete) {
-            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%ld, %u\n", positionDiff, angleData.data);
+    if (goPosition <= 51200)
+    //if (goPosition <= 9000)
+    {
+        // 测试：以2000mA电流跑一圈
+        mt6816.readAngle(angleData);
+        uartCount++;
+        if (uartCount == 200 && uart.m_txComplete) {
+            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%u,%u\n", angleData.data, goPosition);
             uart.transmit((uint8_t*)uartSendBuf, len);
+            uartCount = 0;
         }
-    //int32_t count = 256 * (targetSpeed / 81.92) + 256;
-    count = count + 1;
-    //count += 256;
-    if (count >= 51200) {
-        count = count % 51200;
+        
+        SetFocCurrentVector(goPosition, 1000);
+        goPosition += 2;
     }
-    //SetFocCurrentVector(256 * (targetSpeed / 81.92), 1000);
-    SetFocCurrentVector(count, 500);
-
-}
-
-void calcVelocityPid(int32_t _speed) {
-    // speed: 转动的角度，用mt6816的编码值代替
-    positionDiff = currentPosition - prevPosition;
-    prevSpeed = positionDiff;
-
-    speedError = _speed - prevSpeed;
-
-    speedDerivative = (speedError - prevSpeedError) / 1;
-    integral += speedError;
-    pidOutput = (kp * speedError) + (kd * speedDerivative);
-    prevSpeedError = speedError;
+    else {
+        goPosition = 0;
+    }
 }
 
 void loop100ms(void *context) {
@@ -172,6 +134,73 @@ void loop500ms(void *context) {
         count_500ms = 0;
     }
     count_500ms++;
+}
+
+void stepMotor(int step)
+{
+    switch(step % STEP_PER_CIRCLE)
+    {
+        case 0:
+            tb67h450.setOutptA(true, false);
+            tb67h450.setOutptB(false, false);
+            break;
+        case 1:
+            tb67h450.setOutptA(false, false);
+            tb67h450.setOutptB(true, false);
+            break;
+        case 2:
+            tb67h450.setOutptA(false, true);
+            tb67h450.setOutptB(false, false);
+            break;
+        case 3:
+            tb67h450.setOutptA(false, false);
+            tb67h450.setOutptB(false, true);
+            break;
+    }
+}
+
+void stepMotor8(int step)
+{
+    switch(step % 8)
+    {
+        case 0:
+            tb67h450.setOutptA(true, false);
+            tb67h450.setOutptB(false, false);
+            break;
+        case 1:
+            tb67h450.setOutptA(true, false);
+            tb67h450.setOutptB(true, false);
+            break;
+        case 2:
+            tb67h450.setOutptA(false, false);
+            tb67h450.setOutptB(true, false);
+            break;
+        case 3:
+            tb67h450.setOutptA(false, true);
+            tb67h450.setOutptB(true, false);
+            break;
+        case 4:
+            tb67h450.setOutptA(false, true);
+            tb67h450.setOutptB(false, false);
+            break;
+        case 5:
+            tb67h450.setOutptA(false, true);
+            tb67h450.setOutptB(false, true);
+            break;
+        case 6:
+            tb67h450.setOutptA(false, false);
+            tb67h450.setOutptB(false, true);
+            break;
+        case 7:
+            tb67h450.setOutptA(true, false);
+            tb67h450.setOutptB(false, true);
+            break;
+    }
+}
+
+void stepMotorStop() {
+    tb67h450.setOutptA(false, false);
+    tb67h450.setOutptB(false, false);
 }
 
 void SetFocCurrentVector(uint32_t _directionInCount, int32_t _current_mA)
