@@ -57,6 +57,7 @@ target_sources(stm32cubemx INTERFACE
     ../../Core/Src/tim.c
     ../../Core/Src/sysInit.c
     ../../Core/Src/utils.c
+    ../../Core/Src/stockpile_f103cb.c
 )
 
 target_link_directories(stm32cubemx INTERFACE

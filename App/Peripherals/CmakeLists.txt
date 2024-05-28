@@ -11,7 +11,7 @@ set(APP_SOURCES
     ./Src/uart_dma.cpp 
     ./Src/timer.cpp 
     ./Src/pwm.cpp 
-
+    ./Src/soft_eeprom.cpp
     #./Src/main.cpp
     #./Src/peripheral_test.cpp
 )
