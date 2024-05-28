@@ -26,15 +26,15 @@ public:
         Stockpile_Flash_Data_Set_Write_Add(m_stockpile, write_add);
     }
     //Flash_16位数据写入				
-    inline void Write_Data16(uint16_t *data, uint32_t num) {
+    inline void Write_Data16_Append(uint16_t *data, uint32_t num) {
         Stockpile_Flash_Data_Write_Data16(m_stockpile, data, num);
     }
     //Flash_32位数据写入
-    inline void Write_Data32(uint32_t *data, uint32_t num) {
+    inline void Write_Data32_Append(uint32_t *data, uint32_t num) {
         Stockpile_Flash_Data_Write_Data32(m_stockpile, data, num);
     }	
     //Flash_64位数据写入
-    inline void Write_Data64(uint64_t *data, uint32_t num) {
+    inline void Write_Data64_Append(uint64_t *data, uint32_t num) {
         Stockpile_Flash_Data_Write_Data64(m_stockpile, data, num);
     }
 private:
