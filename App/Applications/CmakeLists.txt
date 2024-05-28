@@ -1,11 +1,18 @@
 set(APP_SOURCES
     ./Src/motor.cpp
 
-    ./Src/main.cpp
+    #./Src/main.cpp
 )
 
-# 创建可执行文件
-add_executable(app ${APP_SOURCES})
+# 根据条件添加源文件
+if(MAIN IN_LIST TARGETS_TO_BUILD)
+    list(APPEND APP_SOURCES ./Src/main.cpp)
+    add_executable(app ${APP_SOURCES})
+elseif(APP_TEST IN_LIST TARGETS_TO_BUILD)
+    message(STATUS "Building application test")
+    list(APPEND APP_SOURCES ./Src/test.cpp)
+    add_executable(app ${APP_SOURCES})
+endif()
 
 #包含 cmake 文件夹中的头文件
 target_include_directories(app PUBLIC

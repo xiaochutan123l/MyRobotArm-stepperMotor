@@ -12,13 +12,17 @@ set(APP_SOURCES
     ./Src/timer.cpp 
     ./Src/pwm.cpp 
     ./Src/soft_eeprom.cpp
-    #./Src/main.cpp
-    #./Src/peripheral_test.cpp
 )
 
-# 创建可执行文件
-add_library(peripherals ${APP_SOURCES})
-#add_executable(peripherals ${APP_SOURCES})
+# 根据条件添加源文件
+if(PERIPHERAL_TEST IN_LIST TARGETS_TO_BUILD)
+    message(STATUS "Building peripheral test")
+    list(APPEND APP_SOURCES ./Src/peripheral_test.cpp)
+    add_executable(peripherals ${APP_SOURCES})
+else()
+    # build as library
+    add_library(peripherals ${APP_SOURCES})
+endif()
 
 #包含 cmake 文件夹中的头文件
 target_include_directories(peripherals PUBLIC

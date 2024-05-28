@@ -16,6 +16,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # # 创建可执行文件
 # add_executable(AppExecutable ${APP_SOURCES})
 
+# 定义要编译的目标
+# 通过注释掉不需要的目标，只保留一个需要编译的目标
+set(TARGETS_TO_BUILD
+    #PERIPHERAL_TEST
+    #DRIVER_TEST
+    #APP_TEST
+    MAIN
+)
+
+# 设置预处理宏
+foreach(target IN LISTS TARGETS_TO_BUILD)
+    add_definitions(-D${target})
+endforeach()
+
 add_subdirectory(
     ./Applications
 )

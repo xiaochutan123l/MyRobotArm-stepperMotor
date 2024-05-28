@@ -5,8 +5,15 @@ set(APP_SOURCES
     # ./Src/main.cpp
 )
 
-# 创建可执行文件
-add_library(drivers ${APP_SOURCES})
+# 根据条件添加源文件
+if(DRIVER_TEST IN_LIST TARGETS_TO_BUILD)
+    message(STATUS "Building driver test")
+    list(APPEND APP_SOURCES ./Src/test.cpp)
+    add_executable(drivers ${APP_SOURCES})
+else()
+    # build as library
+    add_library(drivers ${APP_SOURCES})
+endif()
 
 #包含 cmake 文件夹中的头文件
 target_include_directories(drivers PUBLIC
