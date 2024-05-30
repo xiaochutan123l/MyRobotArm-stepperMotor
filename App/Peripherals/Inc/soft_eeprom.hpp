@@ -6,6 +6,8 @@
 #define USER_DATA 0
 #define CALI_DATA 1
 
+#define CALI_DATA_ADDR STOCKPILE_APP_CALI_ADDR
+
 class Soft_EEPROM {
 public: 
     Soft_EEPROM(uint8_t type);

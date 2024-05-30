@@ -31,7 +31,7 @@
 ******/
 
 /*****
-  ** @file     : encode_cali.c/h
+  ** @file     : m_encode_cali.c/h
   ** @brief    : 编码器校准
   ** @versions : 1.1.4
   ** @time     : 2019/11/28
@@ -40,38 +40,14 @@
 *****/
 
 //Oneself
-#include "encode_cali.h"
-
-//Config
-#include "stockpile_f103cb.h"
-
-//Base_Drivers
-#include "mt6816.h"
-#include "hw_elec.h"
-
-//Control
-#include "signal_port.h"
-#include "motor_control.h"
-
-//Kernel
-#include "loop.h"
-
-//校准器实例
-Encode_Cali_Typedef encode_cali;	//定义一个校准器
-
-//私有函数
-uint32_t CycleRem(uint32_t a,uint32_t b);									//取余(函数形式实现,防止编译器优化)
-int32_t CycleSub(int32_t a, int32_t b, int32_t cyc);			//取循环差(函数形式实现,防止编译器优化)
-int32_t CycleAverage(int32_t a, int32_t b, int32_t cyc);	//取循环平均值(函数形式实现,防止编译器优化)
-
-void Calibration_Data_Check(void);		//校准器原始数据检查
+#include "calibrator.hpp"
 
 /**
   * 取余,兼容一个周期的负数(核心控制-参数自动转换为无符号整形)
   * @param  NULL
   * @retval NULL
 **/
-uint32_t CycleRem(uint32_t a,uint32_t b)
+uint32_t Calibrator::CycleRem(uint32_t a,uint32_t b)
 {
 	return (a+b)%b;
 }
@@ -81,7 +57,7 @@ uint32_t CycleRem(uint32_t a,uint32_t b)
   * @param  NULL
   * @retval NULL
 **/
-int32_t CycleSub(int32_t a, int32_t b, int32_t cyc)
+int32_t Calibrator::CycleSub(int32_t a, int32_t b, int32_t cyc)
 {
 	int32_t sub_data;
 
@@ -96,7 +72,7 @@ int32_t CycleSub(int32_t a, int32_t b, int32_t cyc)
   * @param  NULL
   * @retval NULL
 **/
-int32_t CycleAverage(int32_t a, int32_t b, int32_t cyc)
+int32_t Calibrator::CycleAverage(int32_t a, int32_t b, int32_t cyc)
 {
 	int32_t sub_data;
 	int32_t ave_data;
@@ -117,7 +93,7 @@ int32_t CycleAverage(int32_t a, int32_t b, int32_t cyc)
   * @param  NULL
   * @retval NULL
 **/
-int32_t CycleDataAverage(uint16_t *data, uint16_t length, int32_t cyc)
+int32_t Calibrator::CycleDataAverage(uint16_t *data, uint16_t length, int32_t cyc)
 {
 	int32_t sum_data = 0;	//积分和
 	int32_t sub_data;			//差
@@ -146,7 +122,7 @@ int32_t CycleDataAverage(uint16_t *data, uint16_t length, int32_t cyc)
   * @param  NULL
   * @retval NULL
   */
-void Calibration_Data_Check(void)
+void Calibrator::Calibration_Data_Check(void)
 {
 	uint32_t	count;			//用于各个计数
 	int32_t		sub_data;		//用于各个算差
@@ -154,57 +130,57 @@ void Calibration_Data_Check(void)
 	/******************** 检查平均值连续性及方向 ********************/
 	//求解平均值数据
 	for(count=0; count<Move_Step_NUM+1; count++){
-		encode_cali.coder_data_f[count] = (uint16_t)CycleAverage((int32_t)encode_cali.coder_data_f[count], (int32_t)encode_cali.coder_data_r[count], CALI_Encode_Res);
+		m_encode_cali.coder_data_f[count] = (uint16_t)CycleAverage((int32_t)m_encode_cali.coder_data_f[count], (int32_t)m_encode_cali.coder_data_r[count], CALI_Encode_Res);
 	}
 	//平均值数据检查
-	sub_data = CycleSub((int32_t)encode_cali.coder_data_f[0], (int32_t)encode_cali.coder_data_f[Move_Step_NUM-1], CALI_Encode_Res);
-	if(sub_data == 0)	{	encode_cali.error_code = CALI_Error_Average_Dir; return;	}
-	if(sub_data > 0)	{	encode_cali.dir = true;	}
-	if(sub_data < 0)	{	encode_cali.dir = false;	}
+	sub_data = CycleSub((int32_t)m_encode_cali.coder_data_f[0], (int32_t)m_encode_cali.coder_data_f[Move_Step_NUM-1], CALI_Encode_Res);
+	if(sub_data == 0)	{	m_encode_cali.error_code = CALI_Error_Average_Dir; return;	}
+	if(sub_data > 0)	{	m_encode_cali.dir = true;	}
+	if(sub_data < 0)	{	m_encode_cali.dir = false;	}
 	for(count=1; count<Move_Step_NUM; count++)
 	{
-		sub_data = CycleSub((int32_t)encode_cali.coder_data_f[count], (int32_t)encode_cali.coder_data_f[count-1], CALI_Encode_Res);
-		if(abs(sub_data) > (CALI_Gather_Encode_Res * 3 / 2))	{	encode_cali.error_code = CALI_Error_Average_Continuity;	encode_cali.error_data = count;	return;	}	//两次数据差过大
-		if(abs(sub_data) < (CALI_Gather_Encode_Res * 1 / 2))	{	encode_cali.error_code = CALI_Error_Average_Continuity;	encode_cali.error_data = count;	return;	}	//两次数据差过小
-		if(sub_data == 0)																			{	encode_cali.error_code = CALI_Error_Average_Dir;				encode_cali.error_data = count;	return;	}
-		if((sub_data > 0) && (!encode_cali.dir))							{	encode_cali.error_code = CALI_Error_Average_Dir;				encode_cali.error_data = count;	return;	}
-		if((sub_data < 0) && (encode_cali.dir))								{	encode_cali.error_code = CALI_Error_Average_Dir;				encode_cali.error_data = count;	return;	}
+		sub_data = CycleSub((int32_t)m_encode_cali.coder_data_f[count], (int32_t)m_encode_cali.coder_data_f[count-1], CALI_Encode_Res);
+		if(abs(sub_data) > (CALI_Gather_Encode_Res * 3 / 2))	{	m_encode_cali.error_code = CALI_Error_Average_Continuity;	m_encode_cali.error_data = count;	return;	}	//两次数据差过大
+		if(abs(sub_data) < (CALI_Gather_Encode_Res * 1 / 2))	{	m_encode_cali.error_code = CALI_Error_Average_Continuity;	m_encode_cali.error_data = count;	return;	}	//两次数据差过小
+		if(sub_data == 0)																			{	m_encode_cali.error_code = CALI_Error_Average_Dir;				m_encode_cali.error_data = count;	return;	}
+		if((sub_data > 0) && (!m_encode_cali.dir))							{	m_encode_cali.error_code = CALI_Error_Average_Dir;				m_encode_cali.error_data = count;	return;	}
+		if((sub_data < 0) && (m_encode_cali.dir))								{	m_encode_cali.error_code = CALI_Error_Average_Dir;				m_encode_cali.error_data = count;	return;	}
 	}
 
 	/******************** 全段域校准 完全拟合传感器数据与电机实际相位角非线性关系 ********************/
 	//寻找区间下标及阶跃差值
 	uint32_t step_num = 0;
-	if(encode_cali.dir){
+	if(m_encode_cali.dir){
 		for(count=0; count<Move_Step_NUM; count++){
-			sub_data = (int32_t)encode_cali.coder_data_f[CycleRem(count+1, Move_Step_NUM)] - (int32_t)encode_cali.coder_data_f[CycleRem(count, Move_Step_NUM)];
+			sub_data = (int32_t)m_encode_cali.coder_data_f[CycleRem(count+1, Move_Step_NUM)] - (int32_t)m_encode_cali.coder_data_f[CycleRem(count, Move_Step_NUM)];
 			if(sub_data < 0){
 				step_num++;
-				encode_cali.rcd_x = count;//使用区间前标
-				encode_cali.rcd_y = (CALI_Encode_Res-1) - encode_cali.coder_data_f[CycleRem(encode_cali.rcd_x, Move_Step_NUM)];
+				m_encode_cali.rcd_x = count;//使用区间前标
+				m_encode_cali.rcd_y = (CALI_Encode_Res-1) - m_encode_cali.coder_data_f[CycleRem(m_encode_cali.rcd_x, Move_Step_NUM)];
 			}
 		}
 		if(step_num != 1){
-			encode_cali.error_code = CALI_Error_PhaseStep;
+			m_encode_cali.error_code = CALI_Error_PhaseStep;
 			return;
 		}
 	}
 	else{
 		for(count=0; count<Move_Step_NUM; count++){
-			sub_data = (int32_t)encode_cali.coder_data_f[CycleRem(count+1, Move_Step_NUM)] - (int32_t)encode_cali.coder_data_f[CycleRem(count, Move_Step_NUM)];
+			sub_data = (int32_t)m_encode_cali.coder_data_f[CycleRem(count+1, Move_Step_NUM)] - (int32_t)m_encode_cali.coder_data_f[CycleRem(count, Move_Step_NUM)];
 			if(sub_data > 0){
 				step_num++;
-				encode_cali.rcd_x = count;//使用区间前标
-				encode_cali.rcd_y = (CALI_Encode_Res-1) - encode_cali.coder_data_f[CycleRem(encode_cali.rcd_x+1, Move_Step_NUM)];
+				m_encode_cali.rcd_x = count;//使用区间前标
+				m_encode_cali.rcd_y = (CALI_Encode_Res-1) - m_encode_cali.coder_data_f[CycleRem(m_encode_cali.rcd_x+1, Move_Step_NUM)];
 			}
 		}
 		if(step_num != 1){
-			encode_cali.error_code = CALI_Error_PhaseStep;
+			m_encode_cali.error_code = CALI_Error_PhaseStep;
 			return;
 		}
 	}
 
 	//校准OK
-	encode_cali.error_code = CALI_No_Error;
+	m_encode_cali.error_code = CALI_No_Error;
 	return;
 }
 
@@ -213,22 +189,22 @@ void Calibration_Data_Check(void)
   * @param  NULL
   * @retval NULL
   */
-void Calibration_Init(void)
+void Calibrator::Calibration_Init(void)
 {
 	//信号
-	encode_cali.trigger = false;
-	encode_cali.error_code = CALI_No_Error;
-	encode_cali.error_data = 0;
+	m_encode_cali.trigger = false;
+	m_encode_cali.error_code = CALI_No_Error;
+	m_encode_cali.error_data = 0;
 	//读取过程
-	encode_cali.state = CALI_Disable;
-	encode_cali.out_location = 0;
+	m_encode_cali.state = CALI_Disable;
+	m_encode_cali.out_location = 0;
 		//coder_data_f[]
 		//coder_data_r[]
 		//dir
 	//全段域校准过程数据
-	encode_cali.rcd_x = 0;
-	encode_cali.rcd_y = 0;
-	encode_cali.result_num = 0;
+	m_encode_cali.rcd_x = 0;
+	m_encode_cali.rcd_y = 0;
+	m_encode_cali.result_num = 0;
 }
 
 
@@ -237,7 +213,7 @@ void Calibration_Init(void)
   * @param  NULL
   * @retval NULL
   */
-void Calibration_Interrupt_Callback(void)
+void Calibrator::Calibration_Interrupt_Callback(void)
 {
 #define AutoCali_Speed	2		//自动校准速度(主要用于编码器预数据采集)
 #define Cali_Speed			1		//校准速度(用于精确的数据采集)
@@ -246,112 +222,112 @@ void Calibration_Interrupt_Callback(void)
 	//CurrentControl_OutWakeUp();
 	
 	//状态变换
-	switch(encode_cali.state)
+	switch(m_encode_cali.state)
 	{
 		//失能状态
 		case CALI_Disable:
 			//ELEC_Set_Sleep();
-			if(encode_cali.trigger)
+			if(m_encode_cali.trigger)
 			{
-				REIN_HW_Elec_SetDivideElec(encode_cali.out_location, Current_Cali_Current);
-				//CurrentControl_Out_FeedTrack(encode_cali.out_location, Current_Cali_Current, true, true);
-				encode_cali.out_location = Move_Pulse_NUM;			//输出到1圈位置
-				encode_cali.gather_count = 0;										//采集清零
-				encode_cali.state = CALI_Forward_Encoder_AutoCali;	//--->编码器正转自动校准
+				m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+				//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
+				m_encode_cali.out_location = Move_Pulse_NUM;			//输出到1圈位置
+				m_encode_cali.gather_count = 0;										//采集清零
+				m_encode_cali.state = CALI_Forward_Encoder_AutoCali;	//--->编码器正转自动校准
 				//初始化标志
-				encode_cali.error_code = CALI_No_Error;
-				encode_cali.error_data = 0;
+				m_encode_cali.error_code = CALI_No_Error;
+				m_encode_cali.error_data = 0;
 			}
 		break;
 		//编码器正转自动校准
 		case CALI_Forward_Encoder_AutoCali://正转个1圈 (1 * Motor_Pulse_NUM) -> (2 * Motor_Pulse_NUM)
-			encode_cali.out_location += AutoCali_Speed;
-			REIN_HW_Elec_SetDivideElec(encode_cali.out_location, Current_Cali_Current);
-			//CurrentControl_Out_FeedTrack(encode_cali.out_location, Current_Cali_Current, true, true);
-			if(encode_cali.out_location == 2 * Move_Pulse_NUM)
+			m_encode_cali.out_location += AutoCali_Speed;
+			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
+			if(m_encode_cali.out_location == 2 * Move_Pulse_NUM)
 			{
-				encode_cali.out_location = Move_Pulse_NUM;
-				encode_cali.state = CALI_Forward_Measure;//--->正向测量
+				m_encode_cali.out_location = Move_Pulse_NUM;
+				m_encode_cali.state = CALI_Forward_Measure;//--->正向测量
 			}
 		break;
 		//正向测量
 		case CALI_Forward_Measure://(Motor_Pulse_NUM) -> (2 * Motor_Pulse_NUM)
-			if((encode_cali.out_location % Move_Divide_NUM) == 0)//每到达采集细分量点采集一次数据
+			if((m_encode_cali.out_location % Move_Divide_NUM) == 0)//每到达采集细分量点采集一次数据
 			{
 				//采集
-				encode_cali.coder_data_gather[encode_cali.gather_count++] = mt6816.angle_data;
-				if(encode_cali.gather_count == Gather_Quantity){
+				m_encode_cali.coder_data_gather[m_encode_cali.gather_count++] = m_encoder.updateAngle();
+				if(m_encode_cali.gather_count == Gather_Quantity){
 					//记录数据
-					encode_cali.coder_data_f[(encode_cali.out_location - Move_Pulse_NUM) / Move_Divide_NUM]
-						= CycleDataAverage(encode_cali.coder_data_gather, Gather_Quantity, CALI_Encode_Res);
+					m_encode_cali.coder_data_f[(m_encode_cali.out_location - Move_Pulse_NUM) / Move_Divide_NUM]
+						= CycleDataAverage(m_encode_cali.coder_data_gather, Gather_Quantity, CALI_Encode_Res);
 					//采集计数清零
-					encode_cali.gather_count = 0;
+					m_encode_cali.gather_count = 0;
 					//移动位置
-					encode_cali.out_location += Cali_Speed;
+					m_encode_cali.out_location += Cali_Speed;
 				}
 			}
 			else{
 				//移动位置
-				encode_cali.out_location += Cali_Speed;
+				m_encode_cali.out_location += Cali_Speed;
 			}	
-			REIN_HW_Elec_SetDivideElec(encode_cali.out_location, Current_Cali_Current);
-			//CurrentControl_Out_FeedTrack(encode_cali.out_location, Current_Cali_Current, true, true);
-			if(encode_cali.out_location > (2 * Move_Pulse_NUM))
+			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
+			if(m_encode_cali.out_location > (2 * Move_Pulse_NUM))
 			{
-				encode_cali.state = CALI_Reverse_Ret;//--->反向回退
+				m_encode_cali.state = CALI_Reverse_Ret;//--->反向回退
 			}
 		break;
 		//反向回退
 		case CALI_Reverse_Ret://(2 * Motor_Pulse_NUM) -> (2 * Motor_Pulse_NUM + Motor_Divide_NUM * 20)
-			encode_cali.out_location += Cali_Speed;
-			REIN_HW_Elec_SetDivideElec(encode_cali.out_location, Current_Cali_Current);
-			//CurrentControl_Out_FeedTrack(encode_cali.out_location, Current_Cali_Current, true, true);
-			if(encode_cali.out_location == (2 * Move_Pulse_NUM + Move_Divide_NUM * 20))
+			m_encode_cali.out_location += Cali_Speed;
+			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
+			if(m_encode_cali.out_location == (2 * Move_Pulse_NUM + Move_Divide_NUM * 20))
 			{
-				encode_cali.state = CALI_Reverse_Gap;//--->反向消差
+				m_encode_cali.state = CALI_Reverse_Gap;//--->反向消差
 			}
 		break;
 		//反向消差
 		case CALI_Reverse_Gap://(2 * Motor_Pulse_NUM + Motor_Divide_NUM * 20) -> (2 * Motor_Pulse_NUM)
-			encode_cali.out_location -= Cali_Speed;
-			REIN_HW_Elec_SetDivideElec(encode_cali.out_location, Current_Cali_Current);
-			//CurrentControl_Out_FeedTrack(encode_cali.out_location, Current_Cali_Current, true, true);
-			if(encode_cali.out_location == (2 * Move_Pulse_NUM))
+			m_encode_cali.out_location -= Cali_Speed;
+			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
+			if(m_encode_cali.out_location == (2 * Move_Pulse_NUM))
 			{
-				encode_cali.state = CALI_Reverse_Measure;//--->反向测量
+				m_encode_cali.state = CALI_Reverse_Measure;//--->反向测量
 			}
 		break;
 		//反向测量
 		case CALI_Reverse_Measure://(2 * Motor_Pulse_NUM) -> (Motor_Pulse_NUM)
-			if((encode_cali.out_location % Move_Divide_NUM) == 0)//每到达采集细分量点采集一次数据
+			if((m_encode_cali.out_location % Move_Divide_NUM) == 0)//每到达采集细分量点采集一次数据
 			{
 				//采集
-				encode_cali.coder_data_gather[encode_cali.gather_count++] = mt6816.angle_data;
-				if(encode_cali.gather_count == Gather_Quantity){
+				m_encode_cali.coder_data_gather[m_encode_cali.gather_count++] = m_encoder.updateAngle();
+				if(m_encode_cali.gather_count == Gather_Quantity){
 					//记录数据
-					encode_cali.coder_data_r[(encode_cali.out_location - Move_Pulse_NUM) / Move_Divide_NUM]
-						= CycleDataAverage(encode_cali.coder_data_gather, Gather_Quantity, CALI_Encode_Res);
+					m_encode_cali.coder_data_r[(m_encode_cali.out_location - Move_Pulse_NUM) / Move_Divide_NUM]
+						= CycleDataAverage(m_encode_cali.coder_data_gather, Gather_Quantity, CALI_Encode_Res);
 					//采集计数清零
-					encode_cali.gather_count = 0;
+					m_encode_cali.gather_count = 0;
 					//移动位置
-					encode_cali.out_location -= Cali_Speed;
+					m_encode_cali.out_location -= Cali_Speed;
 				}
 			}
 			else{
 				//移动位置
-				encode_cali.out_location -= Cali_Speed;
+				m_encode_cali.out_location -= Cali_Speed;
 			}	
-			REIN_HW_Elec_SetDivideElec(encode_cali.out_location, Current_Cali_Current);
-			//CurrentControl_Out_FeedTrack(encode_cali.out_location, Current_Cali_Current, true, true);
-			if(encode_cali.out_location < Move_Pulse_NUM)
+			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
+			if(m_encode_cali.out_location < Move_Pulse_NUM)
 			{
-				encode_cali.state = CALI_Operation;//--->解算
+				m_encode_cali.state = CALI_Operation;//--->解算
 			}
 		break;
 		//解算
 		case CALI_Operation:
 			//进行校准运算中
-			REIN_HW_Elec_SetDivideElec(0, 0);
+			m_motor.SetFocCurrentVector(0, 0);
 			//CurrentControl_Out_FeedTrack(0, 0, true, true);
 		break;
 		default:
@@ -364,115 +340,115 @@ void Calibration_Interrupt_Callback(void)
   * @param  NULL
   * @retval NULL
   */
-void Calibration_Loop_Callback(void)
+void Calibrator::Calibration_Loop_Callback(void)
 {
 	int32_t		data_i32;
 	uint16_t	data_u16;
 //	uint16_t	data_u8;
 	
 	//非解算态退出
-	if(encode_cali.state != CALI_Operation)
+	if(m_encode_cali.state != CALI_Operation)
 		return;
 	
 	//PWM输出衰减态
-	REIN_HW_Elec_SetSleep();
+	m_motor.setSleep();
 
 	//校准器原始数据检查
 	Calibration_Data_Check();
 	
 	/**********  进行快速表表格建立  **********/
-	if(encode_cali.error_code == CALI_No_Error)
+	if(m_encode_cali.error_code == CALI_No_Error)
 	{
 		//数据解析
 		/******************** 全段域校准 完全拟合传感器数据与电机实际相位角非线性关系 ********************/
 		int32_t step_x, step_y;
-		encode_cali.result_num = 0;
-		Stockpile_Flash_Data_Empty(&stockpile_quick_cali);		//擦除数据区
-		Stockpile_Flash_Data_Begin(&stockpile_quick_cali);		//开始写数据区
-		if(encode_cali.dir){
-			for(step_x = encode_cali.rcd_x; step_x < encode_cali.rcd_x + Move_Step_NUM + 1; step_x++){
-				data_i32 = CycleSub(	encode_cali.coder_data_f[CycleRem(step_x+1, Move_Step_NUM)],
-															encode_cali.coder_data_f[CycleRem(step_x,   Move_Step_NUM)],
+		m_encode_cali.result_num = 0;
+		m_flash_manager.Empty();		//擦除数据区
+		m_flash_manager.Begin();		//开始写数据区
+		if(m_encode_cali.dir){
+			for(step_x = m_encode_cali.rcd_x; step_x < m_encode_cali.rcd_x + Move_Step_NUM + 1; step_x++){
+				data_i32 = CycleSub(	m_encode_cali.coder_data_f[CycleRem(step_x+1, Move_Step_NUM)],
+															m_encode_cali.coder_data_f[CycleRem(step_x,   Move_Step_NUM)],
 															CALI_Encode_Res);
-				if(step_x == encode_cali.rcd_x){//开始边缘
-					for(step_y = encode_cali.rcd_y; step_y < data_i32; step_y++){
+				if(step_x == m_encode_cali.rcd_x){//开始边缘
+					for(step_y = m_encode_cali.rcd_y; step_y < data_i32; step_y++){
 						data_u16 = CycleRem(	Move_Divide_NUM * step_x + Move_Divide_NUM * step_y / data_i32,
 																	Move_Pulse_NUM);
-						Stockpile_Flash_Data_Write_Data16(&stockpile_quick_cali, &data_u16, 1);
-						encode_cali.result_num++;
+						m_flash_manager.Write_Data16_Append(&data_u16, 1);
+						m_encode_cali.result_num++;
 					}
 				}
-				else if(step_x == encode_cali.rcd_x + Move_Step_NUM){//结束边缘
-					for(step_y = 0; step_y < encode_cali.rcd_y; step_y++){
+				else if(step_x == m_encode_cali.rcd_x + Move_Step_NUM){//结束边缘
+					for(step_y = 0; step_y < m_encode_cali.rcd_y; step_y++){
 						data_u16 = CycleRem(	Move_Divide_NUM * step_x + Move_Divide_NUM * step_y / data_i32,
 																	Move_Pulse_NUM);
-						Stockpile_Flash_Data_Write_Data16(&stockpile_quick_cali, &data_u16, 1);
-						encode_cali.result_num++;
+						m_flash_manager.Write_Data16_Append(&data_u16, 1);
+						m_encode_cali.result_num++;
 					}
 				}
 				else{//中间
 					for(step_y = 0; step_y < data_i32; step_y++){
 						data_u16 = CycleRem(	Move_Divide_NUM * step_x + Move_Divide_NUM * step_y / data_i32,
 																	Move_Pulse_NUM);
-						Stockpile_Flash_Data_Write_Data16(&stockpile_quick_cali, &data_u16, 1);
-						encode_cali.result_num++;
+						m_flash_manager.Write_Data16_Append(&data_u16, 1);
+						m_encode_cali.result_num++;
 					}
 				}
 			}
 		}
 		else
 		{
-			for(step_x = encode_cali.rcd_x + Move_Step_NUM; step_x > encode_cali.rcd_x - 1; step_x--)
+			for(step_x = m_encode_cali.rcd_x + Move_Step_NUM; step_x > m_encode_cali.rcd_x - 1; step_x--)
 			{
-				data_i32 = CycleSub(	encode_cali.coder_data_f[CycleRem(step_x, Move_Step_NUM)],
-															encode_cali.coder_data_f[CycleRem(step_x+1, Move_Step_NUM)],
+				data_i32 = CycleSub(	m_encode_cali.coder_data_f[CycleRem(step_x, Move_Step_NUM)],
+															m_encode_cali.coder_data_f[CycleRem(step_x+1, Move_Step_NUM)],
 															CALI_Encode_Res);
-				if(step_x == encode_cali.rcd_x+Move_Step_NUM){//开始边缘
-					for(step_y = encode_cali.rcd_y; step_y < data_i32; step_y++){
+				if(step_x == m_encode_cali.rcd_x+Move_Step_NUM){//开始边缘
+					for(step_y = m_encode_cali.rcd_y; step_y < data_i32; step_y++){
 						data_u16 = CycleRem(	Move_Divide_NUM * (step_x+1) - Move_Divide_NUM * step_y / data_i32,
 																	Move_Pulse_NUM);
-						Stockpile_Flash_Data_Write_Data16(&stockpile_quick_cali, &data_u16, 1);
-						encode_cali.result_num++;
+						m_flash_manager.Write_Data16_Append(&data_u16, 1);
+						m_encode_cali.result_num++;
 					}
 				}
-				else if(step_x == encode_cali.rcd_x){//结束边缘
-					for(step_y = 0; step_y < encode_cali.rcd_y; step_y++){
+				else if(step_x == m_encode_cali.rcd_x){//结束边缘
+					for(step_y = 0; step_y < m_encode_cali.rcd_y; step_y++){
 						data_u16 = CycleRem(	Move_Divide_NUM * (step_x+1) - Move_Divide_NUM * step_y / data_i32,
 																	Move_Pulse_NUM);
-						Stockpile_Flash_Data_Write_Data16(&stockpile_quick_cali, &data_u16, 1);
-						encode_cali.result_num++;
+						m_flash_manager.Write_Data16_Append(&data_u16, 1);
+						m_encode_cali.result_num++;
 					}
 				}
 				else{//中间
 					for(step_y = 0; step_y < data_i32; step_y++){
 						data_u16 = CycleRem(	Move_Divide_NUM * (step_x+1) - Move_Divide_NUM * step_y / data_i32,
 																	Move_Pulse_NUM);
-						Stockpile_Flash_Data_Write_Data16(&stockpile_quick_cali, &data_u16, 1);
-						encode_cali.result_num++;
+						m_flash_manager.Write_Data16_Append(&data_u16, 1);
+						m_encode_cali.result_num++;
 					}
 				}
 			}
 		}
-		Stockpile_Flash_Data_End(&stockpile_quick_cali);	//结束写数据区
+		m_flash_manager.End();	//结束写数据区
 		
-		if(encode_cali.result_num != CALI_Encode_Res)
-			encode_cali.error_code = CALI_Error_Analysis_Quantity;
+		if(m_encode_cali.result_num != CALI_Encode_Res)
+			m_encode_cali.error_code = CALI_Error_Analysis_Quantity;
 	}
 
 	//确认校准结果
-	if(encode_cali.error_code == CALI_No_Error){
-		mt6816.rectify_valid = true;
+	if(m_encode_cali.error_code == CALI_No_Error){
+		m_encoder.setRectValid(true);
 	}
 	else{
-		mt6816.rectify_valid = false;
-		Stockpile_Flash_Data_Empty(&stockpile_quick_cali);	//清除校准区数据
+		m_encoder.setRectValid(false);
+		m_flash_manager.Empty();	//清除校准区数据
 	}
 	
 	//运动配置覆盖
-	Signal_MoreIO_Capture_Goal();			//读取信号端口数据以清除校准期间采样的信号
-	motor_control.stall_flag = true;	//触发堵转保护,即校准后禁用运动控制
+	// Signal_MoreIO_Capture_Goal();			//读取信号端口数据以清除校准期间采样的信号
+	// motor_control.stall_flag = true;	//触发堵转保护,即校准后禁用运动控制
 	
 	//清理校准信号
-	encode_cali.state = CALI_Disable;
-	encode_cali.trigger = false;			//清除校准触发
+	m_encode_cali.state = CALI_Disable;
+	m_encode_cali.trigger = false;			//清除校准触发
 }

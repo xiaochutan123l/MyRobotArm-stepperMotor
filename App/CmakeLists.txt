@@ -22,7 +22,8 @@ set(TARGETS_TO_BUILD
     #PERIPHERAL_TEST
     #DRIVER_TEST
     #APP_TEST
-    MAIN
+    APP_CALIBRATION_TEST
+    #MAIN
 )
 
 # 设置预处理宏

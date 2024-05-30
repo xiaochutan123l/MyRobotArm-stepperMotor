@@ -11,12 +11,18 @@ typedef struct
     uint16_t dacValue12Bits;
 } FastSinToDac_t;
 
-class MOTOR {
+class Motor {
 public:
     inline void init() {
-        m_motor_driver.init()
-    }
+        m_motor_driver.init();
+    };
     void SetFocCurrentVector(uint32_t _directionInCount, int32_t _current_mA);
+    inline void setSleep() {
+        m_motor_driver.setOutptA(false, false);
+        m_motor_driver.setOutptB(false, false);
+        m_motor_driver.setVrefA(0);
+        m_motor_driver.setVrefB(0);
+    };
     
 private:
     TB67H450 m_motor_driver;

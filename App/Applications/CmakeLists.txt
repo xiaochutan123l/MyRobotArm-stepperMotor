@@ -1,6 +1,7 @@
 set(APP_SOURCES
     ./Src/motor.cpp
-
+    ./Src/encoder.cpp
+    ./Src/calibrator.cpp
     #./Src/main.cpp
 )
 
@@ -11,6 +12,10 @@ if(MAIN IN_LIST TARGETS_TO_BUILD)
 elseif(APP_TEST IN_LIST TARGETS_TO_BUILD)
     message(STATUS "Building application test")
     list(APPEND APP_SOURCES ./Src/test.cpp)
+    add_executable(app ${APP_SOURCES})
+elseif(APP_CALIBRATION_TEST IN_LIST TARGETS_TO_BUILD)
+    message(STATUS "Building calibration test")
+    list(APPEND APP_SOURCES ./Src/calibrator_test.cpp)
     add_executable(app ${APP_SOURCES})
 endif()
 
