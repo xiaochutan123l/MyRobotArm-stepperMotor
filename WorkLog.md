@@ -79,6 +79,10 @@ https://zhuanlan.zhihu.com/p/670162318
 ### 2024-05-28
 - 封装了stockpile对flash的读写，完善了motor和encoder类。
 
+### 2024-05-28 - 06-01
+- 改写了calibrator，将c封装成c++，并且测试了校准没有问题。
+
+
 ## 问题
 ### Cmake:
 - Cmake 配置信息从最外层到最里层传递。

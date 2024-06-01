@@ -205,6 +205,10 @@ void Calibrator::Calibration_Init(void)
 	m_encode_cali.rcd_x = 0;
 	m_encode_cali.rcd_y = 0;
 	m_encode_cali.result_num = 0;
+
+
+	m_motor.init();
+	m_encoder.init();
 }
 
 
@@ -237,6 +241,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 				//初始化标志
 				m_encode_cali.error_code = CALI_No_Error;
 				m_encode_cali.error_data = 0;
+				m_encoder.updateAngle();
 			}
 		break;
 		//编码器正转自动校准
@@ -249,6 +254,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 				m_encode_cali.out_location = Move_Pulse_NUM;
 				m_encode_cali.state = CALI_Forward_Measure;//--->正向测量
 			}
+			m_encoder.updateAngle();
 		break;
 		//正向测量
 		case CALI_Forward_Measure://(Motor_Pulse_NUM) -> (2 * Motor_Pulse_NUM)

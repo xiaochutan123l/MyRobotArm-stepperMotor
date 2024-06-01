@@ -88,7 +88,7 @@ typedef struct{
 	uint16_t 		coder_data_r[Move_Step_NUM+1];	//反向校准读取的数据
 	bool				dir;		//校准数据方向
 	//全段域校准过程数据
-	int32_t		rcd_x, rcd_y;			//寻找区间下标及阶跃差值
+	int32_t		rcd_x, rcd_y;			//寻找区间下标及阶跃差值  - 阶跃（0-16834跳转位置）step位置
 	uint32_t	result_num;				//统计数量
 }Encode_Cali_Typedef;
 
@@ -108,7 +108,7 @@ public:
 	inline void trigger() {
 		m_encode_cali.trigger = true;;
 	};
-private:
+//private:
 	//取余(函数形式实现,防止编译器优化)
 	uint32_t CycleRem(uint32_t a,uint32_t b);		
 	//取循环差(函数形式实现,防止编译器优化)							
