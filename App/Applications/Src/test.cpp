@@ -56,6 +56,16 @@ int subDivCount = 0;
 int count_100ms = 0;
 int count_500ms = 0;
 
+// for speed test.
+#define ENCODER_BUF 256 * 2
+uint16_t encoder_buf[ENCODER_BUF];
+uint16_t buf_conut = 0;
+bool stop_moving = false;
+bool first_time = true;
+uint32_t position = 0;
+uint32_t step = 0;
+uint16_t division = 0;
+
 void loop100ms(void *context);
 void loop50us(void *context);
 void loop500ms(void *context);
@@ -91,10 +101,25 @@ int main() {
 
     //timer100ms.start();
     //timer500ms.start();
+    SetFocCurrentVector(0, 2000);
+    HAL_Delay(500);
     timer50us.start();
     //printf("start timer ok.\n");
 
     while (1) {
+
+        if (stop_moving) {
+            //SetFocCurrentVector(0, 1000);
+            //printf("stop movind.\n");
+            for (uint16_t i = 0; i < ENCODER_BUF; i++) {
+                //if (uart.m_txComplete) {
+                // uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%u\n", angleData.data);
+                // uart.transmit((uint8_t*)uartSendBuf, len);
+                printf("%u, %u\n", i, encoder_buf[i]);
+            }
+            //SetFocCurrentVector(0, 0);
+            break;
+        }
     }
 
     return 0;
@@ -102,24 +127,47 @@ int main() {
 
 // main loop
 void loop50us(void *context) {
-    if (goPosition <= 51200)
-    //if (goPosition <= 9000)
-    {
-        // 测试：以2000mA电流跑一圈
+    if (!stop_moving) {
         mt6816.readAngle(angleData);
-        uartCount++;
-        if (uartCount == 200 && uart.m_txComplete) {
-            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%u,%u\n", angleData.data, goPosition);
-            uart.transmit((uint8_t*)uartSendBuf, len);
-            uartCount = 0;
+        encoder_buf[buf_conut] = angleData.data;
+        buf_conut++;
+        if (buf_conut % 128 == 0) {
+            position += 256;
+            SetFocCurrentVector(position, 2000);
         }
-        
-        SetFocCurrentVector(goPosition, 1000);
-        goPosition += 2;
+        //position += 256;
+        //SetFocCurrentVector(position, 2000);
+        if (buf_conut >= ENCODER_BUF) {
+            stop_moving = true;
+            SetFocCurrentVector(256, 0);
+        }
     }
-    else {
-        goPosition = 0;
-    }
+    
+    // 逐渐加速
+    // division++;
+    // if (division <= 2) {
+    //     return;
+    // }
+    // else {
+    //     division = 0;
+    // }
+
+    // if (step >= 128) {
+    //     step = 128;
+    // }
+    // if (position < 52100) {
+    //     mt6816.readAngle(angleData);
+    //     position += step;
+    //     SetFocCurrentVector(position, 2000);
+    //     step++;
+    // }
+    // else {
+    //     mt6816.readAngle(angleData);
+    //     position += step;
+    //     SetFocCurrentVector(position, 2000);
+    //     step++;
+    //     position = position % 51200;
+    // }
 }
 
 void loop100ms(void *context) {

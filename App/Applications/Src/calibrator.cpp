@@ -207,8 +207,8 @@ void Calibrator::Calibration_Init(void)
 	m_encode_cali.result_num = 0;
 
 
-	m_motor.init();
-	m_encoder.init();
+	m_motor->init();
+	m_encoder->init();
 }
 
 
@@ -233,7 +233,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 			//ELEC_Set_Sleep();
 			if(m_encode_cali.trigger)
 			{
-				m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+				m_motor->SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
 				//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
 				m_encode_cali.out_location = Move_Pulse_NUM;			//输出到1圈位置
 				m_encode_cali.gather_count = 0;										//采集清零
@@ -241,27 +241,27 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 				//初始化标志
 				m_encode_cali.error_code = CALI_No_Error;
 				m_encode_cali.error_data = 0;
-				m_encoder.updateAngle();
+				m_encoder->updateAngle();
 			}
 		break;
 		//编码器正转自动校准
 		case CALI_Forward_Encoder_AutoCali://正转个1圈 (1 * Motor_Pulse_NUM) -> (2 * Motor_Pulse_NUM)
 			m_encode_cali.out_location += AutoCali_Speed;
-			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			m_motor->SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
 			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
 			if(m_encode_cali.out_location == 2 * Move_Pulse_NUM)
 			{
 				m_encode_cali.out_location = Move_Pulse_NUM;
 				m_encode_cali.state = CALI_Forward_Measure;//--->正向测量
 			}
-			m_encoder.updateAngle();
+			m_encoder->updateAngle();
 		break;
 		//正向测量
 		case CALI_Forward_Measure://(Motor_Pulse_NUM) -> (2 * Motor_Pulse_NUM)
 			if((m_encode_cali.out_location % Move_Divide_NUM) == 0)//每到达采集细分量点采集一次数据
 			{
 				//采集
-				m_encode_cali.coder_data_gather[m_encode_cali.gather_count++] = m_encoder.updateAngle();
+				m_encode_cali.coder_data_gather[m_encode_cali.gather_count++] = m_encoder->updateAngle();
 				if(m_encode_cali.gather_count == Gather_Quantity){
 					//记录数据
 					m_encode_cali.coder_data_f[(m_encode_cali.out_location - Move_Pulse_NUM) / Move_Divide_NUM]
@@ -276,7 +276,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 				//移动位置
 				m_encode_cali.out_location += Cali_Speed;
 			}	
-			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			m_motor->SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
 			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
 			if(m_encode_cali.out_location > (2 * Move_Pulse_NUM))
 			{
@@ -286,7 +286,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 		//反向回退
 		case CALI_Reverse_Ret://(2 * Motor_Pulse_NUM) -> (2 * Motor_Pulse_NUM + Motor_Divide_NUM * 20)
 			m_encode_cali.out_location += Cali_Speed;
-			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			m_motor->SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
 			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
 			if(m_encode_cali.out_location == (2 * Move_Pulse_NUM + Move_Divide_NUM * 20))
 			{
@@ -296,7 +296,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 		//反向消差
 		case CALI_Reverse_Gap://(2 * Motor_Pulse_NUM + Motor_Divide_NUM * 20) -> (2 * Motor_Pulse_NUM)
 			m_encode_cali.out_location -= Cali_Speed;
-			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			m_motor->SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
 			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
 			if(m_encode_cali.out_location == (2 * Move_Pulse_NUM))
 			{
@@ -308,7 +308,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 			if((m_encode_cali.out_location % Move_Divide_NUM) == 0)//每到达采集细分量点采集一次数据
 			{
 				//采集
-				m_encode_cali.coder_data_gather[m_encode_cali.gather_count++] = m_encoder.updateAngle();
+				m_encode_cali.coder_data_gather[m_encode_cali.gather_count++] = m_encoder->updateAngle();
 				if(m_encode_cali.gather_count == Gather_Quantity){
 					//记录数据
 					m_encode_cali.coder_data_r[(m_encode_cali.out_location - Move_Pulse_NUM) / Move_Divide_NUM]
@@ -323,7 +323,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 				//移动位置
 				m_encode_cali.out_location -= Cali_Speed;
 			}	
-			m_motor.SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
+			m_motor->SetFocCurrentVector(m_encode_cali.out_location, Current_Cali_Current);
 			//CurrentControl_Out_FeedTrack(m_encode_cali.out_location, Current_Cali_Current, true, true);
 			if(m_encode_cali.out_location < Move_Pulse_NUM)
 			{
@@ -333,7 +333,7 @@ void Calibrator::Calibration_Interrupt_Callback(void)
 		//解算
 		case CALI_Operation:
 			//进行校准运算中
-			m_motor.SetFocCurrentVector(0, 0);
+			m_motor->SetFocCurrentVector(0, 0);
 			//CurrentControl_Out_FeedTrack(0, 0, true, true);
 		break;
 		default:
@@ -357,7 +357,7 @@ void Calibrator::Calibration_Loop_Callback(void)
 		return;
 	
 	//PWM输出衰减态
-	m_motor.setSleep();
+	m_motor->setSleep();
 
 	//校准器原始数据检查
 	Calibration_Data_Check();
@@ -443,10 +443,10 @@ void Calibrator::Calibration_Loop_Callback(void)
 
 	//确认校准结果
 	if(m_encode_cali.error_code == CALI_No_Error){
-		m_encoder.setRectValid(true);
+		m_encoder->setRectValid(true);
 	}
 	else{
-		m_encoder.setRectValid(false);
+		m_encoder->setRectValid(false);
 		m_flash_manager.Empty();	//清除校准区数据
 	}
 	

@@ -94,7 +94,7 @@ typedef struct{
 
 class Calibrator {
 public:
-	Calibrator() : m_flash_manager(CALI_DATA) {};
+	Calibrator(Motor *motor, Encoder *encoder) : m_motor(motor), m_encoder(encoder), m_flash_manager(CALI_DATA) {};
 	//校准器初始化
 	void Calibration_Init(void);			
 	//校准器中断回调(稳定中断调用)					
@@ -120,8 +120,8 @@ public:
 	//校准器原始数据检查
 	void Calibration_Data_Check(void);		
 
-	Motor m_motor;
-	Encoder m_encoder;
+	Motor *m_motor;
+	Encoder *m_encoder;
 	Encode_Cali_Typedef m_encode_cali;	//定义一个校准器
 	Soft_EEPROM m_flash_manager;
 };

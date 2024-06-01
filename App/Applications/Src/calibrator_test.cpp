@@ -13,7 +13,9 @@ Timer timer50us(Tick20khz);
 Timer timer100ms(Tick10hz);
 Timer timer500ms(Tick2hz);
 
-Calibrator calibrator;
+Motor motor;
+Encoder encoder;
+Calibrator calibrator(&motor, &encoder);
 
 UartDMA uart;
 #define BUFFER_SIZE 128
@@ -80,15 +82,15 @@ void loop50us(void *context) {
     else if (printData){
         if (checkError) {
             if (uart.m_txComplete) {
-            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "error: %ld, %ld\n", calibrator.m_encode_cali.error_code, calibrator.m_encode_cali.error_data);
+            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "error: %d, %lu\n", calibrator.m_encode_cali.error_code, calibrator.m_encode_cali.error_data);
             uart.transmit((uint8_t*)uartSendBuf, len);
             checkError = false;
         }
         }
         // print all cali data.
         if (uart.m_txComplete) {
-            //uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%ld, %u, %u\n", count, calibrator.m_encode_cali.coder_data_r[count], calibrator.m_encode_cali.coder_data_f[count]);
-            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%ld, %u\n", count, cali_data[count]);
+            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%ld, %u, %u\n", count, calibrator.m_encode_cali.coder_data_r[count], calibrator.m_encode_cali.coder_data_f[count]);
+            //uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%ld, %u\n", count, cali_data[count]);
             
             uart.transmit((uint8_t*)uartSendBuf, len);
             count++;
