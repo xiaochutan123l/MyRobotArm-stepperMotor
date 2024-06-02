@@ -28,6 +28,20 @@ void UartDMA::receive(uint8_t *data, uint16_t size)
     HAL_UART_Receive_DMA(m_huart, data, size);
 }
 
+// 应该考虑istxcomplete这个问题。可能需要加多个buffer
+int UartDMA::printf(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(m_send_buf, SEND_BUF_SIZE, format, args);
+    va_end(args);
+
+    if (length > 0) {
+        transmit((uint8_t*)m_send_buf, length);
+    }
+
+    return length;
+}
+
 inline void UartDMA::onTxComplete()
 {
     //printf("set tx complete true\n");

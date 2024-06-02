@@ -7,6 +7,9 @@
 #include <cstdint>
 
 #include "utils.h"
+#include <cstdarg>
+
+#define SEND_BUF_SIZE 64
 
 extern UART_HandleTypeDef huart1;
 
@@ -24,6 +27,7 @@ public:
     void transmit(uint8_t *data, uint16_t size);
     // Receive does not work yet.
     void receive(uint8_t *data, uint16_t size);
+    int printf(const char* format, ...);
 
     static inline void onTxComplete();
     static inline void onRxComplete();
@@ -39,6 +43,7 @@ private:
     UART_HandleTypeDef *m_huart;
     DMA_HandleTypeDef *m_hdma_tx;
     DMA_HandleTypeDef *m_hdma_rx;
+    char m_send_buf[SEND_BUF_SIZE];
 
     // uint8_t *m_rxBuffer;
     // uint16_t m_rxBufferSize;

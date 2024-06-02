@@ -2,6 +2,11 @@ set(APP_SOURCES
     ./Src/motor.cpp
     ./Src/encoder.cpp
     ./Src/calibrator.cpp
+    ./Src/controller.cpp
+    ./Src/speed_tracker.cpp
+    ./Src/position_tracker.cpp
+    ./Src/pid.cpp
+    ./Src/dce.cpp
     #./Src/main.cpp
 )
 
@@ -16,6 +21,10 @@ elseif(APP_TEST IN_LIST TARGETS_TO_BUILD)
 elseif(APP_CALIBRATION_TEST IN_LIST TARGETS_TO_BUILD)
     message(STATUS "Building calibration test")
     list(APPEND APP_SOURCES ./Src/calibrator_test.cpp)
+    add_executable(app ${APP_SOURCES})
+elseif(APP_CONTROL_TEST IN_LIST TARGETS_TO_BUILD)
+    message(STATUS "Building controller test")
+    list(APPEND APP_SOURCES ./Src/control_test.cpp)
     add_executable(app ${APP_SOURCES})
 endif()
 

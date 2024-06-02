@@ -8,8 +8,11 @@ class Encoder {
 public:
     inline void init() {
         m_encoder_sensor.init();
+        m_isInit = true;
     }
-
+    inline bool isInit() {
+        return m_isInit;
+    };
     inline uint16_t updateAngle() {
         m_encoder_sensor.readAngle(m_angleData);
         // TODO: rectify the angle data.
@@ -27,6 +30,7 @@ private:
     spiRawData_t m_angleData;
     uint16_t *m_flash_cali_data = (uint16_t*)CALI_DATA_ADDR;
     bool m_rect_valid;
+    bool m_isInit = false;
 };
 
 #endif // ENCODER_HPP

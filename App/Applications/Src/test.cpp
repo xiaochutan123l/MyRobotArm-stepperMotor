@@ -115,7 +115,7 @@ int main() {
                 //if (uart.m_txComplete) {
                 // uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%u\n", angleData.data);
                 // uart.transmit((uint8_t*)uartSendBuf, len);
-                printf("%u, %u\n", i, encoder_buf[i]);
+                uart.printf("%u, %u\n", i, encoder_buf[i]);
             }
             //SetFocCurrentVector(0, 0);
             break;

@@ -15,6 +15,10 @@ class Motor {
 public:
     inline void init() {
         m_motor_driver.init();
+        m_isInit = true;
+    };
+    inline bool isInit() {
+        return m_isInit;
     };
     void SetFocCurrentVector(uint32_t _directionInCount, int32_t _current_mA);
     inline void setSleep() {
@@ -28,6 +32,7 @@ private:
     TB67H450 m_motor_driver;
     FastSinToDac_t m_phaseB;
     FastSinToDac_t m_phaseA;
+    bool m_isInit = false;
 };
 
 #endif // MOTOR_HPP

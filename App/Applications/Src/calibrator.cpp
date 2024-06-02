@@ -206,9 +206,12 @@ void Calibrator::Calibration_Init(void)
 	m_encode_cali.rcd_y = 0;
 	m_encode_cali.result_num = 0;
 
-
-	m_motor->init();
-	m_encoder->init();
+	if (!m_motor->isInit()) {
+		m_motor->init();
+	}
+	if (!m_encoder->isInit()) {
+		m_encoder->init();
+	}
 }
 
 
