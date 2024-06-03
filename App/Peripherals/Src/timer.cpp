@@ -38,9 +38,8 @@ void Timer::stop() {
     }
 }
 
-void Timer::setCallback(void (*callback)(void*), void* context) {
+void Timer::setCallback(void (*callback)()) {
     m_tickCallback = callback;
-    m_tickerContext = context;
 }
 
 extern "C" void TickerTim1() {

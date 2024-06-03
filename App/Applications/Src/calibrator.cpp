@@ -368,6 +368,7 @@ void Calibrator::Calibration_Loop_Callback(void)
 	/**********  进行快速表表格建立  **********/
 	if(m_encode_cali.error_code == CALI_No_Error)
 	{
+		// 以阶跃点位0位置细分点，也就是说取的是绝对零点。
 		//数据解析
 		/******************** 全段域校准 完全拟合传感器数据与电机实际相位角非线性关系 ********************/
 		int32_t step_x, step_y;

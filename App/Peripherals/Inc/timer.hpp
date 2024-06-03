@@ -12,19 +12,18 @@ public:
     void init();
     void start();
     void stop();
-    void setCallback(void (*callback)(void*), void* context);
+    void setCallback(void (*callback)());
 
     inline void tick() {
         if (m_tickCallback) {
-            m_tickCallback(m_tickerContext);
+            m_tickCallback();
         }
     };
 
 private:
     TIM_HandleTypeDef *m_htim;
     uint8_t m_index;
-    void (*m_tickCallback)(void*);
-    void* m_tickerContext;
+    void (*m_tickCallback)();
 
 };
 

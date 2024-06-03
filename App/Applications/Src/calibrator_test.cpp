@@ -25,9 +25,9 @@ uint8_t uartCount = 0;
 int count_100ms = 0;
 int count_500ms = 0;
 
-void loop100ms(void *context);
-void loop50us(void *context);
-void loop500ms(void *context);
+void loop100ms();
+void loop50us();
+void loop500ms();
 
 // uint32_t count = 0;
 uint32_t count = 0;
@@ -52,9 +52,9 @@ int main() {
     HAL_Delay(10);
     printf("start timer.\n");
 
-    timer100ms.setCallback(loop100ms, nullptr);
-    timer50us.setCallback(loop50us, nullptr);
-    timer500ms.setCallback(loop500ms, nullptr);
+    timer100ms.setCallback(loop100ms);
+    timer50us.setCallback(loop50us);
+    timer500ms.setCallback(loop500ms);
 
     //timer100ms.start();
     //timer500ms.start();
@@ -68,7 +68,7 @@ int main() {
     return 0;
 }
 
-void loop50us(void *context) {
+void loop50us() {
     if (calibrator.isTriggered()) {
         calibrator.Calibration_Interrupt_Callback();
         // if (uart.m_txComplete) {
@@ -103,14 +103,14 @@ void loop50us(void *context) {
     
 }
 
-void loop100ms(void *context) {
+void loop100ms() {
     if (count_100ms > 1000) {
         count_100ms = 0;
     }
     count_100ms++;
 }
 
-void loop500ms(void *context) {
+void loop500ms() {
     if (count_500ms > 1000) {
         count_500ms = 0;
     }
