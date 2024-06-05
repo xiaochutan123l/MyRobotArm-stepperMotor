@@ -2,7 +2,7 @@
 #define PACKET_HANDLER_HPP
 
 #include <stdint.h>
-
+//#include "utils.h"
 struct Packet
 {
     /* data */
@@ -21,11 +21,12 @@ public:
     inline void set_packet_processed() {
         m_received = false;
     };
-    inline void packet_process(uint8_t *data, uint16_t size) {
+    inline static void packet_process(uint8_t *data, uint16_t size) {
         m_packet.cmd_type = data[0];
         m_packet.data_len = data[1];
         m_packet.data = data + 2;
         m_received = true;
+        //printf("set true\n");
     };
 
     inline uint8_t getCmdType () {
@@ -36,12 +37,12 @@ public:
         return m_packet.data_len;
     };
 
-    inline uint8_t getData () {
+    inline uint8_t* getData () {
         return m_packet.data;
     };
 
-    Packet m_packet;
-    bool m_received = false;
+    static Packet m_packet;
+    static bool m_received;
 };
 
 #endif // PACKET_HANDLER_HPP

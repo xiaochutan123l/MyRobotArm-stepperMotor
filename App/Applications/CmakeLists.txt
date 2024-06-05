@@ -7,6 +7,7 @@ set(APP_SOURCES
     ./Src/position_tracker.cpp
     ./Src/pid.cpp
     ./Src/dce.cpp
+    ./Src/packet_handler.cpp
     #./Src/main.cpp
 )
 

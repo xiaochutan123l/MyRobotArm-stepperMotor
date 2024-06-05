@@ -216,6 +216,9 @@ void Controller::Callback(void)
 		m_real_location_last			= rect_angle;
 		//第一次运行强制退出
 		first_call = false;
+		// TODO: remove
+		// Write_Goal_Location(1536000);
+		// Write_Goal_Speed(10);
 		return;
 	}
 	

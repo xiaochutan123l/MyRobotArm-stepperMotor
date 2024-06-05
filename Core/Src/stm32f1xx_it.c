@@ -52,6 +52,7 @@ extern void TickerTim2();
 extern void TickerTim4();
 extern void gpio1ISR();
 extern void gpio2ISR();
+extern void HAL_UART_IDLECallback();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/

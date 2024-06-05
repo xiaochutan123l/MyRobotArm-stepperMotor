@@ -25,7 +25,7 @@ void UartDMA::init() {
         MX_USART1_UART_Init();
 
         // 启用空闲中断
-        __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
+        __HAL_UART_ENABLE_IT(m_huart, UART_IT_IDLE);
 
         // 启动DMA接收
         HAL_UART_Receive_DMA(m_huart, m_recv_buf, RECV_BUF_SIZE);
@@ -112,10 +112,9 @@ extern "C" void HAL_UART_IDLECallback(UART_HandleTypeDef *huart)
         memcpy(UartDMA::m_recv_data_buf, UartDMA::m_recv_buf, received_length);
 
         // 处理接收到的数据
-        if (UartDMA::m_idle_rx_cb) {
+        if (UartDMA::m_idle_rx_cb != nullptr) {
             UartDMA::m_idle_rx_cb(UartDMA::m_recv_data_buf, received_length);
         }
-
         // 重启DMA接收
         __HAL_DMA_DISABLE(huart->hdmarx);
         // GPT说的有问题
