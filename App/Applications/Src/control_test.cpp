@@ -117,6 +117,10 @@ void loop50us() {
         //     }   
         // }
         controller.Callback();
+        if (uart.m_txComplete) {
+            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "%ld,%ld\n" , controller.m_est_location, controller.m_goal_location);
+            uart.transmit((uint8_t*)uartSendBuf, len);
+        }
     } 
 }
 

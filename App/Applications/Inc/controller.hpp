@@ -103,7 +103,7 @@ public:
 	void Control_DCE_To_Electric(int32_t _location, int32_t _speed);
 	void Control_PID_To_Electric(int32_t _speed);
 
-private:
+//private:
 	Pid m_pid;
 	Dce m_dce;
 	Motor *m_motor;
