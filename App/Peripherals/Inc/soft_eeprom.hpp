@@ -39,6 +39,11 @@ public:
     inline void Write_Data64_Append(uint64_t *data, uint32_t num) {
         Stockpile_Flash_Data_Write_Data64(m_stockpile, data, num);
     }
+    // length: in bytes
+    void Write_Data32(void *data, uint32_t length);
+    inline void Read_Data32(void *data, uint32_t length) {
+        memcpy(data, (void *)m_stockpile->begin_add, length);
+    }
 private:
     Stockpile_FLASH_Typedef *m_stockpile;
 };
