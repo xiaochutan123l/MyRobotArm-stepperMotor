@@ -27,6 +27,10 @@ elseif(APP_CONTROL_TEST IN_LIST TARGETS_TO_BUILD)
     message(STATUS "Building controller test")
     list(APPEND APP_SOURCES ./Src/control_test.cpp)
     add_executable(app ${APP_SOURCES})
+elseif(PACKET_TEST IN_LIST TARGETS_TO_BUILD)
+    message(STATUS "Building packet test")
+    list(APPEND APP_SOURCES ./Src/packet_test.cpp)
+    add_executable(app ${APP_SOURCES})
 endif()
 
 #包含 cmake 文件夹中的头文件

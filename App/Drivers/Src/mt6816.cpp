@@ -4,6 +4,10 @@ void MT6816::init() {
     m_spi.init();
     m_dataTx[0] = (0x80 | 0x03) << 8;
     m_dataTx[1] = (0x80 | 0x04) << 8;
+
+    // read once at beginning
+    spiRawData_t data;
+    readAngle(data);
 }
 
 bool MT6816::readAngle(spiRawData_t &rawData) {

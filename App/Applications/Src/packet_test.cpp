@@ -1,16 +1,12 @@
 #include "main.h"
 #include "sysInit.h"
 #include "utils.h"
-
 #include "uart_dma.hpp"
 #include "timer.hpp"
 #include "packet_handler.hpp"
-
-//#include "motor.hpp"
-//#include "encoder.hpp"
 #include "calibrator.hpp"
 #include "controller.hpp"
-
+#include "motor_config.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -19,6 +15,8 @@ Encoder encoder;
 
 Calibrator calibrator(&motor, &encoder);
 Controller controller(&motor, &encoder);
+
+MotorConfig motor_config;
 
 Timer timer50us(Tick20khz);
 Timer timer100ms(Tick10hz);
@@ -54,7 +52,14 @@ int main() {
     uart.setIDLECallback(PacketHandler::packet_process);
     HAL_Delay(100);
 
-    calibrator.trigger();
+    motor_config.updateConfig();
+    // set config with default value.
+    if (motor_config.getConfig().configStatus != CONFIG_OK) {
+        // TODO: set default value.
+    }
+    if (!motor_config.getConfig().calibrated) {
+        calibrator.trigger();
+    }
 
     //timer100ms.init();
     //timer500ms.init();
@@ -72,50 +77,24 @@ int main() {
 
     while (1) {
         calibrator.Calibration_Loop_Callback();
+        if (motor_config.getConfig().configStatus == CONFIG_COMMIT) {
+            motor_config.getConfig().configStatus = CONFIG_OK;
+            motor_config.write_data_to_flash();
+        } 
+        else if (motor_config.getConfig().configStatus == CONFIG_RESTORE) {
+            motor_config.write_data_to_flash();
+            HAL_NVIC_SystemReset();
+        }
     }
 
     return 0;
 }
 
-// main loop
-// void loop50us() {
-//     if (calibrator.isTriggered()) {
-//         calibrator.Calibration_Interrupt_Callback();
-//     }
-//     else {
-//         controller.Callback();
-//     }
-// }
-
 void loop50us() {
-    // if (calibrator.isTriggered()) {
-    //     calibrator.Calibration_Interrupt_Callback();
-    // }
-    // else {
-    //     // controller.Callback();
-    //     if (uart.m_txComplete) {
-    //         if (packet_handler.is_new_packet_received()) {
-    //             uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "got packet, pos: %u\n", encoder.updateRectAngle());
-    //             uart.transmit((uint8_t*)uartSendBuf, len);
-    //             //uart.printf("got packet, pos: %u\n", encoder.updateRectAngle());
-    //             packet_handler.set_packet_processed();
-    //         }   
-    //     }
-    // }
     if (calibrator.isTriggered()) {
         calibrator.Calibration_Interrupt_Callback();
     }
     else {
-        // if (uart.m_txComplete) {
-        //     if (packet_handler.is_new_packet_received()) {
-        //         uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "got packet, pos: %u\n", encoder.updateRectAngle());
-        //         uart.transmit((uint8_t*)uartSendBuf, len);
-        //         // uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "got packet\n");
-        //         // uart.transmit((uint8_t*)uartSendBuf, len);
-        //         //uart.printf("got packet, pos: %u\n", encoder.updateRectAngle());
-        //         packet_handler.set_packet_processed();
-        //     }   
-        // }
         controller.Callback();
         if (uart.m_txComplete) {
             uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location);
