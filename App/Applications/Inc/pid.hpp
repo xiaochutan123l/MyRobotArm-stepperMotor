@@ -12,9 +12,9 @@ class Pid {
 public:
 
     //参数配置
-    void SetKP(uint16_t _k);		//KP参数配置
-    void SetKI(uint16_t _k);		//KI参数配置
-    void SetKD(uint16_t _k);		//KD参数配置
+    void SetKP(int32_t _k);		//KP参数配置
+    void SetKI(int32_t _k);		//KI参数配置
+    void SetKD(int32_t _k);		//KD参数配置
     void Set_Default(void);			//PID参数恢复
     //初始化
     void Init(void);

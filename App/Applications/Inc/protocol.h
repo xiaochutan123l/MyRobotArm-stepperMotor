@@ -95,10 +95,13 @@ enum CMDType {
     SetDceKv,
     SetDceKi,
     SetDceKd,
+    SetPosition,
+    SetVelocity,
+    SetSpeedMode,
+    SetLocationMode,
     GetPosition,
     GetVelocity,
-    Stop,
-    Enable,
+    DoCalibrate,
     Reboot,
 };
 

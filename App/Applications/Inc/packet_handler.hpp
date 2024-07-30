@@ -2,16 +2,8 @@
 #define PACKET_HANDLER_HPP
 
 #include <stdint.h>
-//#include "utils.h"
-struct Packet
-{
-    /* data */
-    uint8_t cmd_type;
-    uint8_t data_len;
-    uint8_t *data;
-};
-
-
+#include "packet.h"
+#include "string.h"
 class PacketHandler
 {
 public:
@@ -22,24 +14,15 @@ public:
         m_received = false;
     };
     inline static void packet_process(uint8_t *data, uint16_t size) {
-        m_packet.cmd_type = data[0];
-        m_packet.data_len = data[1];
-        m_packet.data = data + 2;
-        m_received = true;
-        //printf("set true\n");
+        if (IS_VALID_PACKET(data)) {
+            memcpy(&m_packet, data, PACKET_LEN);
+            m_received = true;
+        }
     };
 
-    inline uint8_t getCmdType () {
-        return m_packet.cmd_type;
-    };
-
-    inline uint8_t getDataLen () {
-        return m_packet.data_len;
-    };
-
-    inline uint8_t* getData () {
-        return m_packet.data;
-    };
+    inline Packet& getPacket() {
+        return m_packet;
+    }
 
     static Packet m_packet;
     static bool m_received;

@@ -217,8 +217,8 @@ void Controller::Callback(void)
 		//第一次运行强制退出
 		first_call = false;
 		// TODO: remove
-		Write_Goal_Location(1536800);
-		Write_Goal_Location(8800); 
+		//Write_Goal_Location(1536800);
+		//Write_Goal_Location(8800); 
 		//SetMotorMode(Motor_Mode_Digital_Speed);
 		//Write_Goal_Speed(500000);
 		return;

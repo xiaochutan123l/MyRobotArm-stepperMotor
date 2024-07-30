@@ -9,6 +9,7 @@
 #include "motor_config.hpp"
 #include <cstdint>
 #include <cstring>
+#include "protocol.h"
 
 Motor motor;
 Encoder encoder;
@@ -101,6 +102,86 @@ void loop50us() {
             uart.transmit((uint8_t*)uartSendBuf, len);
         }
     } 
+}
+
+void handle_packet() {
+    if (packet_handler.is_new_packet_received()) {
+        switch(packet_handler.getPacket().cmdNum) {
+            case CMD_UNKNOWN: {
+                break;
+            }
+            case SetPidKp: {
+                controller.m_pid.SetKP(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetPidKi: {
+                controller.m_pid.SetKI(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetPidKd: {
+                controller.m_pid.SetKD(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetDceKp: {
+                controller.m_dce.SetKP(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetDceKv: {
+                controller.m_dce.SetKV(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetDceKi: {
+                controller.m_dce.SetKI(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetDceKd: {
+                controller.m_dce.SetKD(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetPosition: {
+                controller.Write_Goal_Location(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetVelocity: {
+                controller.Write_Goal_Speed(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                break;
+            }
+            case SetSpeedMode: {
+                controller.SetMotorMode(Motor_Mode_Digital_Speed);
+                break;
+            }
+            case SetLocationMode: {
+                controller.SetMotorMode(Motor_Mode_Digital_Location);
+                break;
+            }
+            case GetPosition: {
+                if (uart.m_txComplete) {
+                    packet_handler.getPacket().data = DATA_TO_UINT(controller.m_est_location);
+                    memcpy(uartSendBuf, &packet_handler, sizeof(packet_handler));
+                    uart.transmit((uint8_t*)uartSendBuf, sizeof(packet_handler));
+                }
+                break;
+            }
+            case GetVelocity: {
+                if (uart.m_txComplete) {
+                    packet_handler.getPacket().data = DATA_TO_UINT(controller.m_est_speed);
+                    memcpy(uartSendBuf, &packet_handler, sizeof(packet_handler));
+                    uart.transmit((uint8_t*)uartSendBuf, sizeof(packet_handler));
+                }
+                break;
+            }
+            case DoCalibrate: {
+                calibrator.trigger();
+                break;
+            }
+            case Reboot: {
+                HAL_NVIC_SystemReset();
+                break;
+            }
+            default: break;
+        }
+        packet_handler.set_packet_processed();
+    }
 }
 
 void loop100ms() {

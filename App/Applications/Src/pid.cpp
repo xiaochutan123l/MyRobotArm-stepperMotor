@@ -5,7 +5,7 @@
   * @param  _k
   * @retval NULL
 **/
-void Pid::SetKP(uint16_t _k)
+void Pid::SetKP(int32_t _k)
 {
 	if(_k <= 1024){		
 		m_kp = _k;		
@@ -21,7 +21,7 @@ void Pid::SetKP(uint16_t _k)
   * @param  _k
   * @retval NULL
 **/
-void Pid::SetKI(uint16_t _k)
+void Pid::SetKI(int32_t _k)
 {
 	if(_k <= 1024){		
 		m_ki = _k;		
@@ -37,7 +37,7 @@ void Pid::SetKI(uint16_t _k)
   * @param  _k
   * @retval NULL
 **/
-void Pid::SetKD(uint16_t _k)
+void Pid::SetKD(int32_t _k)
 {
 	if(_k <= 1024){		
 		m_kd = _k;		

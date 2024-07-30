@@ -12,10 +12,10 @@ class Dce {
 public:
 
     //参数配置
-    void SetKP(uint16_t _k);		
-    void SetKI(uint16_t _k);		
-    void SetKV(uint16_t _k);		
-    void SetKD(uint16_t _k);		
+    void SetKP(int32_t _k);		
+    void SetKI(int32_t _k);		
+    void SetKV(int32_t _k);		
+    void SetKD(int32_t _k);		
     //DCE参数恢复
     void Set_Default(void);			
     //初始化

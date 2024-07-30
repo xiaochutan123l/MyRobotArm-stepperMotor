@@ -5,7 +5,7 @@
   * @param  _k
   * @retval NULL
 **/
-void Dce::SetKP(uint16_t _k)
+void Dce::SetKP(int32_t _k)
 {
 	if(_k <= 1024){
     	m_kp = _k;
@@ -21,7 +21,7 @@ void Dce::SetKP(uint16_t _k)
   * @param  _k
   * @retval NULL
 **/
-void Dce::SetKI(uint16_t _k)
+void Dce::SetKI(int32_t _k)
 {
 	if(_k <= 1024){		
         m_ki = _k;		
@@ -37,7 +37,7 @@ void Dce::SetKI(uint16_t _k)
   * @param  _k
   * @retval NULL
 **/
-void Dce::SetKV(uint16_t _k)
+void Dce::SetKV(int32_t _k)
 {
 	if(_k <= 1024){		
         m_kv = _k;		
@@ -53,7 +53,7 @@ void Dce::SetKV(uint16_t _k)
   * @param  _k
   * @retval NULL
 **/
-void Dce::SetKD(uint16_t _k)
+void Dce::SetKD(int32_t _k)
 {
 	if(_k <= 1024){		
         m_kd = _k;		
