@@ -30,10 +30,10 @@ extern "C"{
 #define GET_DATA_INT(packet) ((int32_t)((packet)->data))
 #define GET_DATA_FLOAT(packet) ((float)((packet)->data))
 
-#define DATA_TO_UINT(data) (*(uint32_t*)(data))
-#define DATA_TO_BOOL(data) (*(uint32_t*)(data))
-#define DATA_TO_INT(data) (*(int32_t*)(data))
-#define DATA_TO_FLOAT(data) (*(float*)(data))
+#define DATA_TO_UINT(data) (*(uint32_t*)(&data))
+#define DATA_TO_BOOL(data) (*(uint32_t*)(&data))
+#define DATA_TO_INT(data) (*(int32_t*)(&data))
+#define DATA_TO_FLOAT(data) (*(float*)(&data))
 
 #define PACKET_ID_STR "--Packet-- "
 
@@ -45,7 +45,7 @@ struct Packet {
     uint8_t chunkNum;
     uint16_t cmdNum;
     uint32_t data;
-};
+} __attribute__((aligned(4)));;
 
 // bool isValidPacket(uint8_t *packet);
 // uint8_t getChunkNum(uint8_t *packet);

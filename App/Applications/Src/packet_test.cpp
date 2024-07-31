@@ -30,6 +30,8 @@ uint8_t uartCount = 0;
 
 UartDMA uart;
 PacketHandler packet_handler;
+bool getCommandReceived = false;
+uint32_t uartSendBufOffset = 0;
 
 int count_100ms = 0;
 int count_500ms = 0;
@@ -97,10 +99,21 @@ void loop50us() {
     }
     else {
         handle_packet();
+
+        // main control loop
         controller.Callback();
+
         if (uart.m_txComplete) {
-            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location, controller.m_goal_location);
-            uart.transmit((uint8_t*)uartSendBuf, len);
+            if (getCommandReceived) {
+                uart.transmit((uint8_t*)uartSendBuf, uartSendBufOffset);
+                uartSendBufOffset = 0;
+                getCommandReceived = false;
+            }
+            else {
+                // uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location, controller.m_goal_location);
+                uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld\n" , controller.m_est_speed, controller.m_goal_speed);
+                uart.transmit((uint8_t*)uartSendBuf, len);
+            }
         }
     } 
 }
@@ -112,39 +125,39 @@ void handle_packet() {
                 break;
             }
             case SetPidKp: {
-                controller.m_pid.SetKP(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.m_pid.SetKP(GET_DATA_INT(&packet_handler.getPacket()));
                 break;
             }
             case SetPidKi: {
-                controller.m_pid.SetKI(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.m_pid.SetKI(GET_DATA_INT(&packet_handler.getPacket()));
                 break;
             }
             case SetPidKd: {
-                controller.m_pid.SetKD(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.m_pid.SetKD(GET_DATA_INT(&packet_handler.getPacket()));
                 break;
             }
             case SetDceKp: {
-                controller.m_dce.SetKP(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.m_dce.SetKP(GET_DATA_INT(&packet_handler.getPacket()));
                 break;
             }
             case SetDceKv: {
-                controller.m_dce.SetKV(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.m_dce.SetKV(GET_DATA_INT(&packet_handler.getPacket()));
                 break;
             }
             case SetDceKi: {
-                controller.m_dce.SetKI(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.m_dce.SetKI(GET_DATA_INT(&packet_handler.getPacket()));
                 break;
             }
             case SetDceKd: {
-                controller.m_dce.SetKD(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.m_dce.SetKD(GET_DATA_INT(&packet_handler.getPacket()));
                 break;
             }
             case SetPosition: {
-                controller.Write_Goal_Location((*(int32_t*)&(packet_handler.getPacket().data)));
+                controller.Write_Goal_Location(GET_DATA_INT(&(packet_handler.getPacket())));
                 break;
             }
             case SetVelocity: {
-                controller.Write_Goal_Speed(static_cast<int32_t>GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.Write_Goal_Speed(GET_DATA_INT(&(packet_handler.getPacket())));
                 break;
             }
             case SetSpeedMode: {
@@ -156,19 +169,17 @@ void handle_packet() {
                 break;
             }
             case GetPosition: {
-                if (uart.m_txComplete) {
-                    packet_handler.getPacket().data = DATA_TO_UINT(controller.m_est_location);
-                    memcpy(uartSendBuf, &packet_handler, sizeof(packet_handler));
-                    uart.transmit((uint8_t*)uartSendBuf, sizeof(packet_handler));
-                }
+                getCommandReceived = true;
+                packet_handler.getPacket().data = DATA_TO_UINT(controller.m_est_location);
+                memcpy(uartSendBuf + uartSendBufOffset, &packet_handler.getPacket(), PACKET_LEN);
+                uartSendBufOffset += PACKET_LEN;
                 break;
             }
             case GetVelocity: {
-                if (uart.m_txComplete) {
-                    packet_handler.getPacket().data = DATA_TO_UINT(controller.m_est_speed);
-                    memcpy(uartSendBuf, &packet_handler, sizeof(packet_handler));
-                    uart.transmit((uint8_t*)uartSendBuf, sizeof(packet_handler));
-                }
+                getCommandReceived = true;
+                packet_handler.getPacket().data = DATA_TO_UINT(controller.m_est_speed);
+                memcpy(uartSendBuf + uartSendBufOffset, &packet_handler.getPacket(), PACKET_LEN);
+                uartSendBufOffset += PACKET_LEN;
                 break;
             }
             case DoCalibrate: {
