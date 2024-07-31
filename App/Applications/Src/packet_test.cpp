@@ -37,7 +37,7 @@ int count_500ms = 0;
 void loop100ms();
 void loop50us();
 void loop500ms();
-
+void handle_packet();
 
 int main() {
     System_Init();
@@ -96,9 +96,10 @@ void loop50us() {
         calibrator.Calibration_Interrupt_Callback();
     }
     else {
+        handle_packet();
         controller.Callback();
         if (uart.m_txComplete) {
-            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location);
+            uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location, controller.m_goal_location);
             uart.transmit((uint8_t*)uartSendBuf, len);
         }
     } 
@@ -139,11 +140,11 @@ void handle_packet() {
                 break;
             }
             case SetPosition: {
-                controller.Write_Goal_Location(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.Write_Goal_Location((*(int32_t*)&(packet_handler.getPacket().data)));
                 break;
             }
             case SetVelocity: {
-                controller.Write_Goal_Speed(GET_RAW_DATA_INT(&packet_handler.getPacket()));
+                controller.Write_Goal_Speed(static_cast<int32_t>GET_RAW_DATA_INT(&packet_handler.getPacket()));
                 break;
             }
             case SetSpeedMode: {
@@ -181,6 +182,7 @@ void handle_packet() {
             default: break;
         }
         packet_handler.set_packet_processed();
+        
     }
 }
 
