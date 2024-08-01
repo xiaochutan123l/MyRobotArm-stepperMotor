@@ -110,8 +110,8 @@ void loop50us() {
                 getCommandReceived = false;
             }
             else {
-                // uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location, controller.m_goal_location);
-                uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld\n" , controller.m_est_speed, controller.m_goal_speed);
+                uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location, controller.m_goal_location);
+                //uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld\n" , controller.m_est_speed, controller.m_goal_speed);
                 uart.transmit((uint8_t*)uartSendBuf, len);
             }
         }
