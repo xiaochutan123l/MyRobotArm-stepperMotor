@@ -49,6 +49,7 @@
 #include "encoder.hpp"
 #include "speed_tracker.hpp"
 #include "position_tracker.hpp"
+#include "move_reconstructor.hpp"
 
 /****************************************  Motor_Control  ****************************************/
 /****************************************  Motor_Control  ****************************************/
@@ -110,6 +111,7 @@ public:
 	Encoder *m_encoder;
 	SpeedTracker m_speed_tracker;
 	PositionTracker m_position_tracker;
+	MoveReconstructor m_move_reconstructor;
 
 	bool		m_valid_mode;		//有效标志
 	Motor_Mode	m_mode_order;		//电机模式_新指令的

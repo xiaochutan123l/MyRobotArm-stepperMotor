@@ -186,6 +186,7 @@ void Controller::Init(void)
 	/********** 轨迹规划 **********/
 	m_position_tracker.Init();
 	m_speed_tracker.Init();
+	m_move_reconstructor.Init();
 
 	/********** 传感器初始化 **********/
 	if (!m_motor->isInit()) {
@@ -264,6 +265,9 @@ void Controller::Callback(void)
 		case Motor_Mode_Digital_Speed:		
 			Control_PID_To_Electric(m_soft_speed);																		
 			break;
+		case Motor_Mode_Digital_Track:		
+			Control_DCE_To_Electric(m_soft_location, m_soft_speed);																		
+			break;
 		//其他非法模式
 		default:	
 			break;
@@ -283,8 +287,12 @@ void Controller::Callback(void)
 			case Motor_Mode_Digital_Speed:		
 				m_soft_new_curve = true;	
 				break;
+			case Motor_Mode_Digital_Track:		
+				m_soft_new_curve = true;	
+				break;
 			//其他非法模式
-			default:	break;
+			default:	
+				break;
 		}
 	}
 
@@ -300,8 +308,12 @@ void Controller::Callback(void)
 			case Motor_Mode_Digital_Speed:
 				m_speed_tracker.NewTask(m_est_speed);															
 				break;
+			case Motor_Mode_Digital_Track:
+				m_move_reconstructor.NewTask(m_est_location, m_est_speed);															
+				break;
 			//其他非法模式
-			default:	break;
+			default:	
+				break;
 		}
 	}
 
@@ -318,6 +330,11 @@ void Controller::Callback(void)
 		case Motor_Mode_Digital_Speed:
 			m_speed_tracker.Capture_Goal(m_goal_speed);
 			m_soft_speed    = m_speed_tracker.getGoSpeed();
+			break;
+		case Motor_Mode_Digital_Track:
+			m_move_reconstructor.Capture_Goal(m_goal_location, m_goal_speed);
+			m_soft_location = m_move_reconstructor.getGoPosition();
+			m_soft_speed    = m_move_reconstructor.getGoSpeed();
 			break;
 		//其他非法模式
 		default:	

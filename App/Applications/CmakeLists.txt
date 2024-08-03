@@ -8,6 +8,7 @@ set(APP_SOURCES
     ./Src/pid.cpp
     ./Src/dce.cpp
     ./Src/packet_handler.cpp
+    ./Src/move_reconstructor.cpp
     #./Src/main.cpp
 )
 
