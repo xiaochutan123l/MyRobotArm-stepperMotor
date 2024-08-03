@@ -9,6 +9,7 @@ set(APP_SOURCES
     ./Src/dce.cpp
     ./Src/packet_handler.cpp
     ./Src/move_reconstructor.cpp
+    ./Src/current_tracker.cpp
     #./Src/main.cpp
 )
 

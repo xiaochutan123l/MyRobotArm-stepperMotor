@@ -49,6 +49,7 @@
 #include "encoder.hpp"
 #include "speed_tracker.hpp"
 #include "position_tracker.hpp"
+#include "current_tracker.hpp"
 #include "move_reconstructor.hpp"
 
 /****************************************  Motor_Control  ****************************************/
@@ -101,6 +102,7 @@ public:
 	void Clear_Stall(void);								//清除堵转保护
 	int32_t AdvanceCompen(int32_t _speed);//超前角补偿
 
+	void Control_Cur_To_Electric(int16_t current);
 	void Control_DCE_To_Electric(int32_t _location, int32_t _speed);
 	void Control_PID_To_Electric(int32_t _speed);
 
@@ -111,6 +113,7 @@ public:
 	Encoder *m_encoder;
 	SpeedTracker m_speed_tracker;
 	PositionTracker m_position_tracker;
+	CurrentTracker m_current_tracker;
 	MoveReconstructor m_move_reconstructor;
 
 	bool		m_valid_mode;		//有效标志

@@ -43,6 +43,24 @@
 #include "controller.hpp"
 
 /**
+  * @brief  电流输出
+  * @param  current: 输出电流
+  * @retval NULL
+**/
+void Controller::Control_Cur_To_Electric(int16_t current)
+{
+	//输出FOC电流
+	m_foc_current = current;
+	//输出FOC位置
+	if(m_foc_current > 0)		m_foc_location = m_est_location + Move_Divide_NUM;
+	else if(m_foc_current < 0)	m_foc_location = m_est_location - Move_Divide_NUM;
+	else						m_foc_location = m_est_location;
+	//输出任务到驱动
+	m_motor->SetFocCurrentVector(m_foc_location, m_foc_current);
+	//CurrentControl_Out_FeedTrack(m_foc_location, m_foc_current, false, true);
+}
+
+/**
   * @brief  PID电流控制
   * @param  _speed    控制速度
   * @retval NULL
@@ -52,9 +70,9 @@ void Controller::Control_PID_To_Electric(int32_t _speed)
 	//输出FOC电流
 	m_foc_current = m_pid.CalcOutput(_speed, m_est_speed);
 	//输出FOC位置
-	if(m_foc_current > 0)				m_foc_location = m_est_location + Move_Divide_NUM;
+	if(m_foc_current > 0)		m_foc_location = m_est_location + Move_Divide_NUM;
 	else if(m_foc_current < 0)	m_foc_location = m_est_location - Move_Divide_NUM;
-	else																		m_foc_location = m_est_location;
+	else						m_foc_location = m_est_location;
 	//输出任务到驱动
 	m_motor->SetFocCurrentVector(m_foc_location, m_foc_current);
 	//CurrentControl_Out_FeedTrack(m_foc_location, m_foc_current, false, true);
@@ -71,16 +89,16 @@ void Controller::Control_DCE_To_Electric(int32_t _location, int32_t _speed)
 	//输出FOC电流
 	m_foc_current = m_dce.CalcOutput(_location, _speed, m_est_location, m_est_speed);
 	//输出FOC位置
-	if(m_foc_current > 0)			m_foc_location = m_est_location + Move_Divide_NUM;
+	if(m_foc_current > 0)		m_foc_location = m_est_location + Move_Divide_NUM;
 	else if(m_foc_current < 0)	m_foc_location = m_est_location - Move_Divide_NUM;
-	else																		m_foc_location = m_est_location;
+	else						m_foc_location = m_est_location;
 	//输出任务到驱动
 	m_motor->SetFocCurrentVector(m_foc_location, m_foc_current);
 	//CurrentControl_Out_FeedTrack(m_foc_location, m_foc_current, false, true);
 }
 
-/****************************************  Motor_Control  ****************************************/
-/****************************************  Motor_Control  ****************************************/
+/****************************************  m_  ****************************************/
+/****************************************  m_  ****************************************/
 
 /**
   * @brief  电机模式配置
@@ -186,6 +204,7 @@ void Controller::Init(void)
 	/********** 轨迹规划 **********/
 	m_position_tracker.Init();
 	m_speed_tracker.Init();
+	m_current_tracker.Init();
 	m_move_reconstructor.Init();
 
 	/********** 传感器初始化 **********/
@@ -265,6 +284,9 @@ void Controller::Callback(void)
 		case Motor_Mode_Digital_Speed:		
 			Control_PID_To_Electric(m_soft_speed);																		
 			break;
+		case Motor_Mode_Digital_Current:		
+			Control_Cur_To_Electric(m_soft_current);																		
+			break;
 		case Motor_Mode_Digital_Track:		
 			Control_DCE_To_Electric(m_soft_location, m_soft_speed);																		
 			break;
@@ -285,6 +307,9 @@ void Controller::Callback(void)
 				m_soft_new_curve = true;	
 				break;
 			case Motor_Mode_Digital_Speed:		
+				m_soft_new_curve = true;	
+				break;
+			case Motor_Mode_Digital_Current:		
 				m_soft_new_curve = true;	
 				break;
 			case Motor_Mode_Digital_Track:		
@@ -308,6 +333,9 @@ void Controller::Callback(void)
 			case Motor_Mode_Digital_Speed:
 				m_speed_tracker.NewTask(m_est_speed);															
 				break;
+			case Motor_Mode_Digital_Current:
+				m_current_tracker.NewTask(m_foc_current);															
+				break;
 			case Motor_Mode_Digital_Track:
 				m_move_reconstructor.NewTask(m_est_location, m_est_speed);															
 				break;
@@ -330,6 +358,10 @@ void Controller::Callback(void)
 		case Motor_Mode_Digital_Speed:
 			m_speed_tracker.Capture_Goal(m_goal_speed);
 			m_soft_speed    = m_speed_tracker.getGoSpeed();
+			break;
+		case Motor_Mode_Digital_Current:
+			m_current_tracker.Capture_Goal(m_goal_current);
+			m_soft_current    = m_current_tracker.getGoCurrent();
 			break;
 		case Motor_Mode_Digital_Track:
 			m_move_reconstructor.Capture_Goal(m_goal_location, m_goal_speed);
