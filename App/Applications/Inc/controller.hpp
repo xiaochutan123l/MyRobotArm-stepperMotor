@@ -65,7 +65,10 @@ typedef enum{
 	Control_State_Stall				= 0x04,	//堵转
 }Motor_State;
 
+//配置(模式)
 #define		De_Motor_Mode		Motor_Mode_Digital_Location	//默认配置
+//配置(堵转)
+	#define			De_Motor_Stall	true		//默认堵转保护开关
 
 /**
   * 模式
@@ -87,7 +90,7 @@ public:
 	//参数配置
 	void SetMotorMode(Motor_Mode _mode);	//控制模式
 	void SetDefault(void);								//控制模式参数恢复
-
+	void SetStallSwitch(bool _switch);
 	//数据写入
 	void Write_Goal_Location(int32_t value);//写入目标位置
 	void Write_Goal_Speed(int32_t value);		//写入目标速度
@@ -137,15 +140,29 @@ public:
 	int32_t		m_goal_location;	//目标位置(由信号输入)
 	int32_t		m_goal_speed;			//目标速度(由信号输入)
 	int16_t		m_goal_current;		//目标电流(由信号输入)
+	bool		m_goal_disable;		//目标失能(由信号输入)
+	bool		m_goal_brake;			//目标刹车(由信号输入)
 
 	//软目标
 	int32_t		m_soft_location;	//软位置(由 跟踪器/重构器/插补器/硬运算 得到)
 	int32_t		m_soft_speed;			//软速度(由 跟踪器/重构器/插补器/硬运算 得到)
 	int16_t		m_soft_current;		//软电流(由 跟踪器/重构器/插补器/硬运算 得到)
+	bool		m_soft_disable;		//软失能
+	bool		m_soft_brake;			//软刹车
 	bool		m_soft_new_curve;	//新软目标曲线
 	//输出
 	int32_t		m_foc_location;		//FOC矢量位置
 	int32_t		m_foc_current;		//FOC矢量大小
+
+	bool		m_valid_stall_switch;			//堵转保护开关有效标志
+	bool		m_stall_switch;						//堵转保护开关
+	//堵转识别
+	uint32_t	m_stall_time_us;	//堵转计时器
+	bool		m_stall_flag;			//堵转标志
+	//过载识别
+	uint32_t	m_overload_time_us;	//过载计时器
+	bool		m_overload_flag;		//过载标志
+
 	//状态
 	Motor_State	m_state;			//统一的电机状态
 };

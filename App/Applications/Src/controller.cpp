@@ -122,6 +122,17 @@ void Controller::SetDefault(void)
 }
 
 /**
+  * @brief  堵转保护开关
+  * @param  _switch
+  * @retval NULL
+**/
+void Controller::SetStallSwitch(bool _switch)
+{
+	m_stall_switch = _switch;
+	m_valid_stall_switch = true;
+}
+
+/**
   * @brief  写入目标位置
   * @param  NULL
   * @retval NULL
@@ -186,14 +197,25 @@ void Controller::Init(void)
 	m_goal_location = 0;
 	m_goal_speed = 0;
 	m_goal_current = 0;
+	m_goal_disable = false;
+	m_goal_brake = false;
 	//软目标
 	m_soft_location = 0;
 	m_soft_speed = 0;
 	m_soft_current = 0;
 	m_soft_new_curve = false;
+	m_soft_disable = false;
+	m_soft_brake = false;
 	//输出
 	m_foc_location = 0;
 	m_foc_current = 0;
+	//堵转识别
+	m_stall_time_us = 0;
+	m_stall_flag = false;
+	//过载识别
+	m_overload_time_us = 0;
+	m_overload_flag = false;
+	
 	//状态
 	m_state = Control_State_Stop;		
 	
@@ -274,59 +296,103 @@ void Controller::Callback(void)
 	
 	/************************************ 运动控制 ************************************/
 	/************************************ 运动控制 ************************************/
-	//运行模式分支
-	switch(m_mode_run)
-	{
-		//DIG(CAN/RS485)
-		case Motor_Mode_Digital_Location:	
-			Control_DCE_To_Electric(m_soft_location, m_soft_speed);				
-			break;
-		case Motor_Mode_Digital_Speed:		
-			Control_PID_To_Electric(m_soft_speed);																		
-			break;
-		case Motor_Mode_Digital_Current:		
-			Control_Cur_To_Electric(m_soft_current);																		
-			break;
-		case Motor_Mode_Digital_Track:		
-			Control_DCE_To_Electric(m_soft_location, m_soft_speed);																		
-			break;
-		//其他非法模式
-		default:	
-			break;
+	if((m_stall_flag)			//堵转标志置位
+	|| (m_soft_disable)		//软目标_失能指令
+	|| ((!m_encoder->isRectValid()))			//编码器校准表无效
+	){
+		Clear_Integral();		//清除积分
+		m_foc_location = 0;		//清FOC位置
+		m_foc_current = 0;		//清FOC电流
+		m_motor->setSleep();	//驱动休眠
+		//CurrentControl_OutSleep();			//XDrive采用硬件逻辑电流控制,自动休眠
 	}
-
-	/************************************ 模式变更 ************************************/
-	/************************************ 模式变更 ************************************/
-	//变更
-	if(m_mode_run != m_mode_order)
-	{
-		m_mode_run = m_mode_order;
-		switch(m_mode_run){
+	//输出刹车
+	else if(
+		 (m_soft_brake)			//软目标_刹车指令
+	){
+		Clear_Integral();		//清除积分
+		m_foc_location = 0;		//清FOC位置
+		m_foc_current = 0;		//清FOC电流
+		m_motor->setSleep();	//驱动刹车
+		//CurrentControl_OutBrake();			//XDrive采用硬件逻辑电流控制,自动刹车
+	}
+	else{
+		//运行模式分支
+		switch(m_mode_run)
+		{
 			//DIG(CAN/RS485)
+			case Control_Mode_Stop:	
+				m_motor->setSleep();				
+				break;
 			case Motor_Mode_Digital_Location:	
-				m_soft_new_curve = true;	
+				Control_DCE_To_Electric(m_soft_location, m_soft_speed);				
 				break;
 			case Motor_Mode_Digital_Speed:		
-				m_soft_new_curve = true;	
+				Control_PID_To_Electric(m_soft_speed);																		
 				break;
 			case Motor_Mode_Digital_Current:		
-				m_soft_new_curve = true;	
+				Control_Cur_To_Electric(m_soft_current);																		
 				break;
 			case Motor_Mode_Digital_Track:		
-				m_soft_new_curve = true;	
+				Control_DCE_To_Electric(m_soft_location, m_soft_speed);																		
 				break;
 			//其他非法模式
 			default:	
 				break;
 		}
 	}
+	
+
+	/************************************ 模式变更 ************************************/
+	/************************************ 模式变更 ************************************/
+	//变更
+	if(m_mode_run != m_mode_order)
+	{
+
+		m_mode_run = m_mode_order;
+		m_soft_new_curve = true;	
+		// switch(m_mode_run){
+		// 	//DIG(CAN/RS485)
+		// 	case Motor_Mode_Digital_Location:	
+		// 		m_soft_new_curve = true;	
+		// 		break;
+		// 	case Motor_Mode_Digital_Speed:		
+		// 		m_soft_new_curve = true;	
+		// 		break;
+		// 	case Motor_Mode_Digital_Current:		
+		// 		m_soft_new_curve = true;	
+		// 		break;
+		// 	case Motor_Mode_Digital_Track:		
+		// 		m_soft_new_curve = true;	
+		// 		break;
+		// 	//其他非法模式
+		// 	default:	
+		// 		break;
+		// }
+	}
+
+	//限制
+	if(m_goal_speed	> Move_Rated_Speed)					m_goal_speed	=  Move_Rated_Speed;
+	else if(m_goal_speed < -Move_Rated_Speed)			m_goal_speed	= -Move_Rated_Speed;
+	if(m_goal_current > Current_Rated_Current)			m_goal_current	=  Current_Rated_Current;
+	else if(m_goal_current < -Current_Rated_Current)	m_goal_current	= -Current_Rated_Current;
+
+	//额外的触发新发生器
+	if(	 ((m_soft_disable) && (!m_goal_disable))	//失能指令关闭
+		|| ((m_soft_brake)   && (!m_goal_brake))		//刹车指令关闭
+	){
+		m_soft_new_curve = true;
+	}
 
 	if(m_soft_new_curve){
 		m_soft_new_curve = false;
 		//控制重载和功率模块唤醒
-		Controller::Clear_Integral();	//清除控制积分项目
+		Clear_Integral();	//清除控制积分项目
+		Clear_Stall();		//清除堵转识别
 		switch(m_mode_run){
 			//DIG(CAN/RS485)
+			case Control_Mode_Stop:
+				break;
 			case Motor_Mode_Digital_Location:
 				m_position_tracker.NewTask(m_est_location, m_est_speed);	
 				break;
@@ -350,6 +416,8 @@ void Controller::Callback(void)
 	//提取(软位置,软速度,软电流)
 	switch(m_mode_run){
 		//DIG(CAN/RS485)
+		case Control_Mode_Stop:
+			break;
 		case Motor_Mode_Digital_Location:	
 			m_position_tracker.Capture_Goal(m_goal_location);
 			m_soft_location = m_position_tracker.getGoPosition();
@@ -372,6 +440,76 @@ void Controller::Callback(void)
 		default:	
 			break;
 	}
+	//提取(软失能,软刹车)
+	m_soft_disable = m_goal_disable;
+	m_soft_brake = m_goal_brake;
+
+	/************************************ 状态识别 ************************************/
+	/************************************ 状态识别 ************************************/
+	int32_t abs_out_electric = abs(m_foc_current);
+	//堵转检测
+	if( (m_mode_run == Motor_Mode_Digital_Current)	//电流模式
+	 	&& (abs_out_electric != 0)						//有输出电流
+	 	&& (abs(m_est_speed) < (Move_Pulse_NUM/5))		//低于1/5转/s
+	){
+		if(m_stall_time_us >= (1000 * 1000))	m_stall_flag = true;
+		else									m_stall_time_us += CONTROL_PERIOD_US;
+	}
+	else if( (abs_out_electric == Current_Rated_Current)	//额定电流
+			 && (abs(m_est_speed) < (Move_Pulse_NUM/5))		//低于1/5转/s
+	){
+		if(m_stall_time_us >= (1000 * 1000))	m_stall_flag = true;
+		else									m_stall_time_us += CONTROL_PERIOD_US;
+	}
+	else{
+		m_stall_time_us = 0;
+		//堵转标志不能自清除，需要外部指令才能清除
+	}
+
+	//过载检测
+	if(abs_out_electric == Current_Rated_Current){		//额定电流
+		if(m_overload_time_us >= (1000 * 1000))	m_overload_flag = true;
+		else									m_overload_time_us += CONTROL_PERIOD_US;
+	}
+	else{
+		m_overload_time_us = 0;
+		m_overload_flag = false;//过载标志可自清除
+	}
+	
+	// /************************************ 状态记录 ************************************/
+	// /************************************ 状态记录 ************************************/
+	//统一的电机状态
+	if(m_mode_run == Control_Mode_Stop)	//停止模式
+		m_state = Control_State_Stop;
+	else if(m_stall_flag)								//堵转标志置位
+		m_state = Control_State_Stall;
+	else if(m_overload_flag)						//过载标志置位
+		m_state = Control_State_Overload;
+	else
+	{
+		if(m_mode_run == Motor_Mode_Digital_Location){
+			if( (m_soft_location == m_goal_location)
+			 && (m_soft_speed == 0))
+				m_state = Control_State_Finish;		//软硬目标匹配
+			else
+				m_state = Control_State_Running;
+		}
+		else if(m_mode_run == Motor_Mode_Digital_Speed){
+			if(m_soft_speed == m_goal_speed)
+				m_state = Control_State_Finish;		//软硬目标匹配
+			else
+				m_state = Control_State_Running;
+		}
+		else if(m_mode_run == Motor_Mode_Digital_Current){
+			if(m_soft_current == m_goal_current)
+				m_state = Control_State_Finish;		//软硬目标匹配
+			else
+				m_state = Control_State_Running;
+		}
+		else{
+			m_state = Control_State_Finish;			//软硬目标匹配
+		}
+	}
 }
 
 /**
@@ -384,6 +522,17 @@ void Controller::Clear_Integral(void)
 	//在此处清除整个控制段代码中的积分项
 	m_pid.Clear_Integral();
 	m_dce.Clear_Integral();
+}
+
+/**
+  * @brief  清除堵转识别
+  * @param  NULL
+  * @retval NULL
+**/
+void Controller::Clear_Stall(void)
+{
+	m_stall_time_us = 0;		//堵转计时器
+	m_stall_flag = false;		//堵转标志
 }
 
 /**

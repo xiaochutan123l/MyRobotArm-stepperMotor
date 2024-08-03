@@ -41,6 +41,9 @@ void loop50us();
 void loop500ms();
 void handle_packet();
 
+uint32_t GetMicros(void); 
+uint32_t elapsed_time = 0;
+
 int main() {
     System_Init();
 
@@ -94,6 +97,7 @@ int main() {
 }
 
 void loop50us() {
+    //uint32_t start_t = GetMicros();
     if (calibrator.isTriggered()) {
         calibrator.Calibration_Interrupt_Callback();
     }
@@ -110,12 +114,14 @@ void loop50us() {
                 getCommandReceived = false;
             }
             else {
-                uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location, controller.m_goal_location);
+                uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld\n" , controller.m_est_location, controller.m_real_lap_location);
                 //uint16_t len = snprintf((char*)uartSendBuf, BUFFER_SIZE, "test: %ld,%ld\n" , controller.m_est_speed, controller.m_goal_speed);
                 uart.transmit((uint8_t*)uartSendBuf, len);
             }
         }
+        //elapsed_time = GetMicros() - start_t;
     } 
+    
 }
 
 void handle_packet() {
@@ -209,4 +215,22 @@ void loop500ms() {
         count_500ms = 0;
     }
     count_500ms++;
+}
+
+// 假设系统时钟频率为 72 MHz（适用于STM32F1系列）
+#define SYS_CLOCK_FREQ 72000000 // 72 MHz
+
+uint32_t GetMicros(void) {
+    uint32_t micros;
+    uint32_t sysTickVal;
+    uint32_t loadVal;
+
+    // 获取SysTick当前值和重装载值
+    sysTickVal = SysTick->VAL;
+    loadVal = SysTick->LOAD;
+
+    // 计算当前微秒数
+    micros = (HAL_GetTick() * 1000) + (loadVal - sysTickVal) / (SYS_CLOCK_FREQ / 1000000);
+
+    return micros;
 }
