@@ -169,6 +169,15 @@ void Controller::Write_Goal_Current(int16_t value)
 }
 
 /**
+  * @brief  写入目标电流
+  * @param  NULL
+  * @retval NULL
+**/
+void Controller::Set_Location_Mode_Max_Speed(int32_t value) {
+	m_position_tracker.Set_MaxSpeed(value);
+}
+
+/**
   * @brief  电机控制初始化
   * @param  NULL
   * @retval NULL

@@ -99,8 +99,12 @@ enum CMDType {
     SetVelocity,
     SetSpeedMode,
     SetLocationMode,
+    // Location Mod with given speed
+    // 之后估计要考虑有一个方案一个指令同时设置location和max speed
+    SetVelocityLimit,
     GetPosition,
     GetVelocity,
+    Stop,
     DoCalibrate,
     Reboot,
 };

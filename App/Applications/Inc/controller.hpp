@@ -97,7 +97,7 @@ public:
 	void Write_Goal_Current(int16_t value);	//写入目标电流
 	void Write_Goal_Disable(uint16_t value);//写入目标失能
 	void Write_Goal_Brake(uint16_t value);	//写入目标刹车
-
+	void Set_Location_Mode_Max_Speed(int32_t value);
 	//任务执行
 	void Init(void);											//电机控制初始化
 	void Callback(void);									//控制器任务回调

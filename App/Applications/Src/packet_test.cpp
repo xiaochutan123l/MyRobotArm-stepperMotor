@@ -174,6 +174,14 @@ void handle_packet() {
                 controller.SetMotorMode(Motor_Mode_Digital_Location);
                 break;
             }
+            // Currently for testing purpose.
+            // 之后估计要考虑有一个方案一个指令同时设置location和max speed
+            case SetVelocityLimit: {
+                // 设置最大速度，让电机指定速度运动到接下来给定的位置。
+                controller.Set_Location_Mode_Max_Speed(GET_DATA_INT(&(packet_handler.getPacket())));
+                controller.SetMotorMode(Motor_Mode_Digital_Location);
+                break;
+            }
             case GetPosition: {
                 getCommandReceived = true;
                 packet_handler.getPacket().data = DATA_TO_UINT(controller.m_est_location);
@@ -186,6 +194,10 @@ void handle_packet() {
                 packet_handler.getPacket().data = DATA_TO_UINT(controller.m_est_speed);
                 memcpy(uartSendBuf + uartSendBufOffset, &packet_handler.getPacket(), PACKET_LEN);
                 uartSendBufOffset += PACKET_LEN;
+                break;
+            }
+            case Stop: {
+                controller.SetMotorMode(Control_Mode_Stop);
                 break;
             }
             case DoCalibrate: {
