@@ -1,7 +1,7 @@
 set(APP_SOURCES
     ./Src/mt6816.cpp
     ./Src/tb67h450.cpp
-
+    ./Src/button.cpp
     # ./Src/main.cpp
 )
 

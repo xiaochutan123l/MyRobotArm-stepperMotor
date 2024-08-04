@@ -46,6 +46,7 @@
 #include "motor.hpp"
 #include "control_config.h"
 #include "soft_eeprom.hpp"
+#include "controller.hpp"
 
 //校准数据检查报告
 typedef enum{
@@ -94,7 +95,11 @@ typedef struct{
 
 class Calibrator {
 public:
-	Calibrator(Motor *motor, Encoder *encoder) : m_motor(motor), m_encoder(encoder), m_flash_manager(CALI_DATA) {};
+	Calibrator(Motor *motor, Encoder *encoder, Controller *motor_controller) : 
+		m_motor(motor), 
+		m_encoder(encoder),
+		m_motor_controller(motor_controller),
+		m_flash_manager(CALI_DATA) {};
 	//校准器初始化
 	void Calibration_Init(void);			
 	//校准器中断回调(稳定中断调用)					
@@ -122,6 +127,7 @@ public:
 
 	Motor *m_motor;
 	Encoder *m_encoder;
+	Controller *m_motor_controller;
 	Encode_Cali_Typedef m_encode_cali;	//定义一个校准器
 	Soft_EEPROM m_flash_manager;
 };

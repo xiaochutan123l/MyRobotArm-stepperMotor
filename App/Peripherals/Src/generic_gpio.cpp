@@ -25,7 +25,7 @@ Generic_GPIO::Generic_GPIO(uint16_t gpio_name) {
 
 void Generic_GPIO::init() {
     if (!m_isInitialized) {
-        MX_GPIO_Init();
+        MX_GPIO_Output_Init();
         m_isInitialized = true;
     }
 }

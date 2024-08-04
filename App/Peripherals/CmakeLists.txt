@@ -12,6 +12,7 @@ set(APP_SOURCES
     ./Src/timer.cpp 
     ./Src/pwm.cpp 
     ./Src/soft_eeprom.cpp
+    ./Src/input_gpio.cpp
 )
 
 # 根据条件添加源文件

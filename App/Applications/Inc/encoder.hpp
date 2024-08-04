@@ -3,12 +3,18 @@
 
 #include "mt6816.hpp"
 #include "soft_eeprom.hpp"
+#include "control_config.h"
 
 class Encoder {
 public:
     inline void init() {
         m_encoder_sensor.init();
         m_isInit = true;
+        m_rect_valid = true;
+        for(uint32_t i=0; i<(CALI_Encode_Res); i++){
+            if(m_flash_cali_data[i] == 0xFFFF)
+                m_rect_valid = false;
+	    }
     }
     inline bool isInit() {
         return m_isInit;

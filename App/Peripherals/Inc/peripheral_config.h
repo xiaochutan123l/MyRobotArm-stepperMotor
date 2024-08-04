@@ -24,6 +24,12 @@ extern "C" {
 #define BIN1_Pin GPIOB_PIN_8
 #define BIN2_Pin GPIOB_PIN_9
 
+// Input GPIO
+#define GPIOB_PIN_1 1
+#define GPIOB_PIN_2 2
+#define BUTTON_1 GPIOB_PIN_1
+#define BUTTON_2 GPIOB_PIN_2
+
 #define TIMER_NUM 3
 
 #define TICKER_TIM1 0

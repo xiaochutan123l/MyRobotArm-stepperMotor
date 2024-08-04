@@ -10,12 +10,13 @@
 #include <cstdint>
 #include <cstring>
 #include "protocol.h"
+#include "button.hpp"
 
 Motor motor;
 Encoder encoder;
 
-Calibrator calibrator(&motor, &encoder);
 Controller controller(&motor, &encoder);
+Calibrator calibrator(&motor, &encoder, &controller);
 
 MotorConfig motor_config;
 
@@ -32,6 +33,9 @@ UartDMA uart;
 PacketHandler packet_handler;
 bool getCommandReceived = false;
 uint32_t uartSendBufOffset = 0;
+
+Button button1(BUTTON_1);
+Button button2(BUTTON_2);
 
 int count_100ms = 0;
 int count_500ms = 0;
@@ -58,12 +62,18 @@ int main() {
     uart.setIDLECallback(PacketHandler::packet_process);
     HAL_Delay(100);
 
+    button1.init();
+    button2.init();
+
     motor_config.updateConfig();
     // set config with default value.
-    if (motor_config.getConfig().configStatus != CONFIG_OK) {
-        // TODO: set default value.
-    }
-    if (!motor_config.getConfig().calibrated) {
+    // if (motor_config.getConfig().configStatus != CONFIG_OK) {
+    //     // TODO: set default value.
+    // }
+    // if (!motor_config.getConfig().calibrated) {
+    //     calibrator.trigger();
+    // }
+    if (!button1.isPressed() && !button2.isPressed()) {
         calibrator.trigger();
     }
 
@@ -103,7 +113,6 @@ void loop50us() {
     }
     else {
         handle_packet();
-
         // main control loop
         controller.Callback();
 

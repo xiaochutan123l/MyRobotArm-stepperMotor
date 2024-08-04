@@ -66,9 +66,9 @@ typedef enum{
 }Motor_State;
 
 //配置(模式)
-#define		De_Motor_Mode		Motor_Mode_Digital_Location	//默认配置
+#define		De_Motor_Mode	Motor_Mode_Digital_Location	//默认配置
 //配置(堵转)
-	#define			De_Motor_Stall	true		//默认堵转保护开关
+#define		De_Motor_Stall	true		//默认堵转保护开关
 
 /**
   * 模式

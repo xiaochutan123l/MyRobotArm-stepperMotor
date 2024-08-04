@@ -7,7 +7,10 @@ extern "C" {
 
 #include "main.h"
 
-void MX_GPIO_Init(void);
+// void MX_GPIO_Init(void);
+
+void MX_GPIO_Input_Init(void);
+void MX_GPIO_Output_Init(void);
 
 #ifdef __cplusplus
 }
