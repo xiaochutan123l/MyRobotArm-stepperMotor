@@ -21,6 +21,8 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
+add_compile_options(-O3)
+
 # Set the project name
 set(CMAKE_PROJECT_NAME stepperMotorDriver)
 
