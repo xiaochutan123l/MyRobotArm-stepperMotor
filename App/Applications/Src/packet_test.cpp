@@ -73,7 +73,7 @@ int main() {
     // if (!motor_config.getConfig().calibrated) {
     //     calibrator.trigger();
     // }
-    if (!button1.isPressed() && !button2.isPressed()) {
+    if (button1.isPressed() && button2.isPressed()) {
         calibrator.trigger();
     }
 

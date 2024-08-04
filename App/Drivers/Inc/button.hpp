@@ -22,7 +22,7 @@ public:
 
     // void tick() {}
     inline bool isPressed() {
-        return m_gpio.readPin();
+        return !m_gpio.readPin();
     }
 
 private:
